@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kawacoline - Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- p5.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/addons/p5.sound.min.js"></script>
+</head>
+<body>
+    <!-- Container for p5.js sketch -->
+    <div id="p5-visualizer-container"></div>
+
+    <div id="music-control" title="Mutear/Desmutear Música">
+        <i class="fas fa-volume-up"></i>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="main-container">
+            <div class="profile-picture-placeholder">
+                <img src="assets/PFP.jpg" alt="Kawacoline">
+            </div>
+
+            <div class="intro-section">
+                <h1>Kawacoline</h1>
+                <p>Digital Artist / Live2D</p>
+            </div>
+
+            <div class="icon-sections">
+                <div class="icon-item" data-modal-target="#about-modal">
+                    <i class="fas fa-info-circle fa-2x"></i>
+                    <p>About</p>
+                </div>
+                <div class="icon-item" data-modal-target="#links-modal">
+                    <i class="fas fa-link fa-2x"></i>
+                    <p>Links</p>
+                </div>
+                <div class="icon-item" data-modal-target="#work-modal">
+                    <i class="fas fa-briefcase fa-2x"></i>
+                    <p>Work</p>
+                </div>
+                <div class="icon-item" data-modal-target="#faq-modal">
+                    <i class="fas fa-question-circle fa-2x"></i>
+                    <p>FAQ</p>
+                </div>
+                <div class="icon-item" data-modal-target="#contact-modal">
+                    <i class="fas fa-envelope fa-2x"></i>
+                    <p>Contact</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <a href="https://x.com/kawacoline" target="_blank" aria-label="Twitter" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.youtube.com/channel/UCj4fG3l3L4oTTQgrJ5_amkw/" target="_blank" aria-label="YouTube" title="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.instagram.com/kawacoline/" target="_blank" aria-label="Instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <p>© 2024 Acetylcholine</p>
+        </footer>
+    </div>
+
+    <!-- Ventanas Emergentes (Modals) -->
+    <div id="about-modal" class="modal">
+        <div class="modal-header"><span class="modal-title">About Me</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
+        <div class="modal-content">
+            <h2>Kawa</h2>
+            <p>Hi, I'm Acetylcholine a.k.a Kawacoline, a 2D illustrator.
+You can find my commissions info, likes & art gallery in this website</p>
+            <img src="https://i.pinimg.com/736x/42/8c/04/428c04bddfe8ebedd09f4adda8a798f2.jpg" alt="Imagen sobre mí" class="modal-img">
+        </div>
+    </div>
+
+    <div id="links-modal" class="modal">
+        <div class="modal-header"><span class="modal-title">Links</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
+        <div class="modal-content">
+            <h2>My Networks and Links</h2>
+            <ul class="modal-links-list">
+                <li><a href="https://x.com/kawacoline" target="_blank"><i class="fab fa-twitter"></i> Twitter / X: @kawacoline</a></li>
+                <li><a href="https://www.youtube.com/channel/UCj4fG3l3L4oTTQgrJ5_amkw/" target="_blank"><i class="fab fa-youtube"></i> YouTube: @kawacoline</a></li>
+                <li><a href="https://www.instagram.com/kawacoline/" target="_blank"><i class="fab fa-instagram"></i> Instagram: @kawacoline</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="work-modal" class="modal">
+        <div class="modal-header"><span class="modal-title">Work</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
+        <div class="modal-content">
+            <p class="loading-placeholder">Cargando trabajos...</p>
+        </div>
+    </div>
+
+    <div id="faq-modal" class="modal">
+        <div class="modal-header"><span class="modal-title">FAQ</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
+        <div class="modal-content">
+            <h2>Preguntas Frecuentes (FAQ)</h2>
+            <details>
+                <summary>¿Qué software utilizas?</summary>
+                <p>Respuesta: Clip Studio Paint, Procreate, Photoshop, SAI2, All adobe programs...</p>
+            </details>
+            <details>
+                <summary>¿Aceptas comisiones?</summary>
+                <p>Respuesta: Sí</p>
+            </details>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="modal">
+        <div class="modal-header"><span class="modal-title">Contact</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
+        <div class="modal-content">
+            <h2>¡Hablemos!</h2>
+            <div class="contact-icons">
+                <a href="mailto:kawacoline@gmail.com" title="Email: kawacoline@gmail.com"><i class="fas fa-envelope fa-2x"></i><span>Email</span></a>
+                <a href="https://discord.com/users/199212670497456128" target="_blank" title="Discord: kawacoline"><i class="fab fa-discord fa-2x"></i><span>Discord</span></a>
+            </div>
+             <img src="https://i.pinimg.com/736x/85/62/37/85623702b2f730dcb35d71ca894b3abf.jpg" alt="Kawacoline chibi" style="border-radius: 50%; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">
+        </div>
+    </div>
+
+    <audio id="clickSound" src="assets/click.mp3" preload="auto"></audio>
+    <!-- Background music audio tag is no longer needed here, p5.sound will handle it -->
+
+    <script src="script.js"></script>
+</body>
+</html>
