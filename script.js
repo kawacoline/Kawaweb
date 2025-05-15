@@ -27,9 +27,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let p5SketchInstance;
     let lastVolumeBeforeIconClickMute = 0.7; // Default starting volume for p5 sketch
 
-    // --- Playlist Definition y Player ---
-    // (Todo el bloque de definición de playlist, variables de control, y funciones del reproductor de audio)
-    // --- MOVIDO a audioPlayer.js ---
+    // --- Playlist Definition ---
+    // IMPORTANT: Customize this playlist with your actual song data
+    // Ensure file paths are correct and files exist in your project structure.
+    const playlist = [
+        {
+            title: "гуляю",
+            artist: "ANGUISH, EXILED, elfass",
+            filePath: "assets/PLAYLIST/ANGUISH_HEXILED_elfass_Gulyau.mp3",
+            albumArtPath: "assets/PLAYLIST_COVERS/gulyau_cover.jpg" // UPDATE THIS PATH
+        },
+        {
+            title: "it's rainy outside",
+            artist: "uselet",
+            filePath: "assets/PLAYLIST/its_rainy_outside.mp3",
+            albumArtPath: "assets/PLAYLIST_COVERS/its_rainy_outside_cover.jpg" // UPDATE THIS PATH
+        },
+        {
+            title: "Aegleseeker",
+            artist: "Silentroom vs Frums",
+            filePath: "assets/PLAYLIST/Silentroom_vs_Frums_Aegleseeker.mp3",
+            albumArtPath: "assets/PLAYLIST_COVERS/aegleseeker_cover.jpg" // UPDATE THIS PATH
+        },
+        {
+            title: "World execute (me)",
+            artist: "Mili",
+            filePath: "assets/PLAYLIST/World_execute_(me)_Mili.mp3",
+            albumArtPath: "assets/PLAYLIST_COVERS/world_execute_me_cover.jpg" // UPDATE THIS PATH
+        }
+        // Add more songs here if you have them
+    ];
+    let currentSongIndex = 0;
+    let currentP5Song = null; // Will hold the p5.SoundFile object
+    let isPlayerGloballyPlaying = false; // Tracks if the player *should* be playing (e.g., after user interaction)
+    let isSongLoadedAndReady = false;
+
 
     // --- Work Section Data (Sin cambios) ---
     const workData = [
@@ -291,14 +323,477 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Music Player UI Update Functions ---
-    // (Todas las funciones de UI del reproductor, eventos de botones, control de volumen, etc.)
-    // --- MOVIDO a audioPlayer.js ---
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function updatePlayerUITrackInfo() {
+        if (playlist.length === 0) return;
+        const songData = playlist[currentSongIndex];
+        playerSongTitle.textContent = songData.title;
+        playerSongArtist.textContent = songData.artist;
+        playerAlbumArtImg.src = songData.albumArtPath || 'assets/PLAYLIST_COVERS/default_art.png'; // Fallback
+        playerAlbumArtImg.alt = songData.title + " Album Art";
+    }
+
+    function updatePlayPauseButton(isPlaying) {
+        if (isPlaying) {
+            playerPlayPauseIcon.classList.remove('fa-play');
+            playerPlayPauseIcon.classList.add('fa-pause');
+        } else {
+            playerPlayPauseIcon.classList.remove('fa-pause');
+            playerPlayPauseIcon.classList.add('fa-play');
+        }
+    }
+    
+    function updateProgressUI() {
+        if (currentP5Song && currentP5Song.isLoaded()) {
+            const currentTime = currentP5Song.currentTime();
+            const duration = currentP5Song.duration();
+            if (isFinite(duration) && duration > 0) {
+                playerCurrentTime.textContent = formatTime(currentTime);
+                playerTotalTime.textContent = formatTime(duration);
+                playerProgressBar.value = (currentTime / duration) * 100;
+            } else { 
+                playerCurrentTime.textContent = "0:00";
+                playerTotalTime.textContent = "0:00";
+                playerProgressBar.value = 0;
+            }
+        } else {
+            playerCurrentTime.textContent = "0:00";
+            playerTotalTime.textContent = "0:00";
+            playerProgressBar.value = 0;
+        }
+    }
+
 
     // --- p5.js Sketch Definition ---
-    // (Todo el bloque de definición de sketch, clase Particle, y lógica de visualización)
-    // --- MOVIDO a audioVisualizer.js ---
+    const sketch = (p) => {
+        let fft;
+        let particles = [];
+        let musicSuccessfullyStartedThisSession = false; 
+        let isProcessingOnended = false; // Prevent re-entrant onended calls
+        let isIntentionalTrackChange = false; // Flag for next/previous track changes
 
-    // --- El resto de la lógica de modales y utilidades permanece aquí ---
+        p.setup = () => {
+            p.createCanvas(p.windowWidth, p.windowHeight).parent('p5-visualizer-container');
+            p.angleMode(p.DEGREES);
+            fft = new p5.FFT(0.8, 512); 
+
+            if (playlist.length > 0) {
+                p.loadSongAtIndex(currentSongIndex, false); 
+            }
+            
+            const initialVolume = parseFloat(volumeSlider.value);
+            lastVolumeBeforeIconClickMute = initialVolume > 0 ? initialVolume : 0.7;
+            // Volume will be applied to song when it loads in loadSongAtIndex
+            updateVolumeIconDisplay(initialVolume);
+
+            p.noLoop(); 
+        };
+
+        p.draw = () => {
+            p.background(0); 
+
+            if (currentP5Song && currentP5Song.isLoaded() && currentP5Song.isPlaying()) {
+                 fft.analyze();
+                let wave = fft.waveform();
+                let currentAmp = fft.getEnergy(20, 200);
+
+                p.translate(p.width / 2, p.height / 2);
+
+                if (currentAmp > 210 && particles.length < 200) {
+                    let pNum = p.random(0, 3);
+                    for (let i = 0; i < pNum; i++) {
+                        particles.push(new Particle(p));
+                    }
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    if (!particles[i].edges()) {
+                        particles[i].update(currentAmp > 210);
+                        particles[i].show();
+                    } else {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                p.stroke(255);
+                p.strokeWeight(3);
+                p.noFill();
+
+                for (let t = -1; t <= 1; t += 2) {
+                    p.beginShape();
+                    for (let i = 0; i <= 180; i += 0.75) {
+                        let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
+                        let r = p.map(wave[index], -1, 1, 250, 550);
+                        let x = r * p.sin(i) * t;
+                        let y = r * p.cos(i);
+                        p.vertex(x, y);
+                    }
+                    p.endShape();
+                }
+            }
+             updateProgressUI(); 
+        };
+
+        p.windowResized = () => {
+            p.resizeCanvas(p.windowWidth, p.windowHeight);
+        };
+
+        // Helper functions for the intentional track change flag
+        p.setIntentionalTrackChange = () => {
+            isIntentionalTrackChange = true;
+        };
+        p.clearIntentionalTrackChange = () => {
+            isIntentionalTrackChange = false;
+        };
+        p.getIntentionalTrackChange = () => {
+            return isIntentionalTrackChange;
+        };
+
+        p.loadSongAtIndex = (index, playAfterLoad) => {
+            if (playlist.length === 0) {
+                console.warn("Playlist is empty. Cannot load song.");
+                updatePlayPauseButton(false);
+                return;
+            }
+            isSongLoadedAndReady = false;
+
+            // --- Aggressive cleanup of the previous song ---
+            if (currentP5Song) {
+                const oldSongDataForCleanup = playlist[currentSongIndex]; // Get data before index might change
+                console.log("Cleaning up previous song:", oldSongDataForCleanup.title);
+
+                if (fft) {
+                    fft.setInput(null); // Disconnect FFT from the old song first
+                    console.log("FFT input set to null for old song:", oldSongDataForCleanup.title);
+                }
+
+                // IMPORTANT: Neutralize the onended callback of the song we are about to stop
+                // to prevent it from triggering a premature 'next song' when we call .stop().
+                currentP5Song.onended(() => {
+                    console.log("Neutralized onended for explicitly stopped song:", oldSongDataForCleanup.title);
+                });
+
+                if (currentP5Song.isPlaying()) {
+                    currentP5Song.stop(); // This will trigger the (now neutralized) onended
+                    console.log("Previous song stopped:", oldSongDataForCleanup.title);
+                } else if (currentP5Song.isLoaded()) {
+                    // If loaded but paused, still call stop() to ensure full cleanup
+                    // and to trigger the neutralized onended, resetting its state.
+                    currentP5Song.stop();
+                    console.log("Previous (paused) song explicitly stopped to ensure cleanup:", oldSongDataForCleanup.title);
+                }
+                
+                currentP5Song.disconnect(); // Fully disconnect from p5.sound master output
+                console.log(oldSongDataForCleanup.title, "disconnected from master output.");
+
+                currentP5Song = null;
+                console.log("Previous song reference (currentP5Song) set to null.");
+            }
+            // --- End aggressive cleanup ---
+
+            currentSongIndex = (index + playlist.length) % playlist.length;
+            const songData = playlist[currentSongIndex];
+            console.log("Loading new song:", songData.title, "at index:", currentSongIndex);
+            updatePlayerUITrackInfo();
+
+            playerCurrentTime.textContent = "0:00";
+            playerTotalTime.textContent = "0:00";
+            playerProgressBar.value = 0;
+            updatePlayPauseButton(playAfterLoad && isPlayerGloballyPlaying);
+
+            p.loadSound(songData.filePath,
+                (loadedSound) => {
+                    console.log("Successfully loaded:", songData.title);
+                    // Ensure any lingering previous sound object is truly gone before assigning new one
+                    if (currentP5Song && currentP5Song !== loadedSound) {
+                        console.warn("A previous currentP5Song object was still present before assigning the new one. This should have been cleaned up.");
+                        // Attempt an additional cleanup just in case, though the main cleanup should handle this.
+                        currentP5Song.stop();
+                        currentP5Song.disconnect();
+                    }
+                    currentP5Song = loadedSound;
+                    isSongLoadedAndReady = true;
+                    currentP5Song.setVolume(parseFloat(volumeSlider.value));
+                    if (fft) {
+                        fft.setInput(currentP5Song);
+                        console.log("FFT input set to new song:", songData.title);
+                    }
+
+                    p.clearIntentionalTrackChange();
+
+                    currentP5Song.onended(() => {
+                        if (isProcessingOnended) {
+                            console.warn(`Re-entrancy detected in onended for ${songData.title}. Aborting.`);
+                            return;
+                        }
+                        isProcessingOnended = true;
+
+                        const songTitleForCallback = songData.title;
+                        const wasPlayingGlobally = isPlayerGloballyPlaying;
+
+                        p.clearIntentionalTrackChange();
+
+                        if (wasPlayingGlobally) {
+                            console.log(`Song "${songTitleForCallback}" ended while player was active. Playing next.`);
+                            p.playNextSong();
+                        } else {
+                            console.log(`onended for "${songTitleForCallback}" triggered. Player was not globally playing. Halting playback.`);
+                            updatePlayPauseButton(false);
+                            if (p5SketchInstance && typeof p5SketchInstance.noLoop === 'function') p5SketchInstance.noLoop();
+                        }
+
+                        setTimeout(() => { isProcessingOnended = false; }, 50);
+                    });
+
+                    if (isFinite(currentP5Song.duration()) && currentP5Song.duration() > 0) {
+                        playerTotalTime.textContent = formatTime(currentP5Song.duration());
+                    } else {
+                        console.warn("Song loaded but duration is invalid:", currentP5Song.duration());
+                        playerTotalTime.textContent = "0:00"; // Fallback for invalid duration
+                    }
+                    
+                    // Defer playback slightly if p5.AudioContext is not yet running (it should be after first interaction)
+                    // and if playAfterLoad is requested.
+                    if (playAfterLoad && isPlayerGloballyPlaying) {
+                         if (p.getAudioContext().state === 'running') {
+                            console.log("Attempting to play newly loaded song due to playAfterLoad & isPlayerGloballyPlaying flags:", songData.title);
+                            p.playCurrentSong();
+                         } else {
+                             console.log("Audio context not running, will defer play attempt for:", songData.title);
+                             // The globalUserInteraction handler should pick this up if isPlayerGloballyPlaying is true
+                         }
+                    } else {
+                        console.log("Newly loaded song will not auto-play. playAfterLoad:", playAfterLoad, "isPlayerGloballyPlaying:", isPlayerGloballyPlaying);
+                    }
+                },
+                (err) => {
+                    console.error("Error loading song:", songData.filePath, err);
+                    p.clearIntentionalTrackChange();
+                    isProcessingOnended = false;
+                }
+            );
+        };
+        
+        p.startMusicAfterUserInteraction = () => {
+            if (p.getAudioContext().state !== 'running') {
+                p.userStartAudio().then(() => {
+                    console.log("Audio context started by user interaction.");
+                    musicSuccessfullyStartedThisSession = true;
+                    if (isPlayerGloballyPlaying && currentP5Song && currentP5Song.isLoaded() && !currentP5Song.isPlaying()) {
+                        p.playCurrentSong();
+                    }
+                }).catch(e => console.error("Error starting audio context by user:", e));
+            } else {
+                musicSuccessfullyStartedThisSession = true;
+                if (isPlayerGloballyPlaying && currentP5Song && currentP5Song.isLoaded() && !currentP5Song.isPlaying()) {
+                     p.playCurrentSong();
+                }
+            }
+        };
+
+        p.playCurrentSong = () => {
+            if (!isSongLoadedAndReady) {
+                if (playlist.length > 0) {
+                    // If song isn't loaded, try loading it. It will play if playAfterLoad is true.
+                    p.loadSongAtIndex(currentSongIndex, true); 
+                } else {
+                    console.warn("Cannot play: No song loaded and playlist is empty.");
+                }
+                return;
+            }
+
+            if (currentP5Song && currentP5Song.isLoaded()) { 
+                if (p.getAudioContext().state !== 'running') {
+                    p.startMusicAfterUserInteraction(); 
+                    // Music will attempt to play once audio context is running via the callback in startMusicAfterUserInteraction
+                    return; 
+                }
+                // Ensure we only call play if it's not already playing to avoid potential issues
+                if (!currentP5Song.isPlaying()) {
+                    p.clearIntentionalTrackChange();
+                    currentP5Song.play();
+                }
+                updatePlayPauseButton(true);
+                p.loop(); 
+            }
+        };
+
+        p.pauseCurrentSong = () => {
+            if (currentP5Song && currentP5Song.isPlaying()) {
+                p.clearIntentionalTrackChange();
+                currentP5Song.pause();
+                updatePlayPauseButton(false);
+                p.noLoop(); 
+            }
+        };
+
+        p.playNextSong = () => {
+            if (playlist.length > 0) {
+                p.setIntentionalTrackChange();
+                p.loadSongAtIndex(currentSongIndex + 1, isPlayerGloballyPlaying);
+            }
+        };
+
+        p.playPrevSong = () => {
+            if (playlist.length > 0) {
+                p.setIntentionalTrackChange();
+                p.loadSongAtIndex(currentSongIndex - 1, isPlayerGloballyPlaying);
+            }
+        };
+
+        p.setAudioVolume = (volumeLevel) => {
+            if (currentP5Song && currentP5Song.isLoaded()) {
+                currentP5Song.setVolume(volumeLevel);
+            }
+            if (volumeLevel > 0) {
+                lastVolumeBeforeIconClickMute = volumeLevel;
+            }
+        };
+        
+        p.getAudioVolume = () => {
+            if (currentP5Song && currentP5Song.isLoaded() && typeof currentP5Song.getVolume === 'function') {
+                return currentP5Song.getVolume();
+            }
+            return parseFloat(volumeSlider.value); 
+        };
+        
+        p.getLastNonZeroVolume = () => {
+             return lastVolumeBeforeIconClickMute > 0 ? lastVolumeBeforeIconClickMute : 0.7;
+        };
+
+        p.seekSong = (percentage) => {
+            if (currentP5Song && currentP5Song.isLoaded() && isFinite(currentP5Song.duration()) && currentP5Song.duration() > 0) {
+                const time = currentP5Song.duration() * (percentage / 100);
+                currentP5Song.jump(time);
+                updateProgressUI(); 
+            }
+        };
+    };
+
+    // --- Particle Class ---
+    class Particle {
+        constructor(pInstance) {
+            this.p = pInstance;
+            this.pos = this.p.createVector(0, 0);
+            this.vel = p5.Vector.random2D().mult(this.p.random(1, 3));
+            this.acc = p5.Vector.random2D().mult(this.p.random(0.01, 0.05));
+            this.w = this.p.random(2, 5);
+            this.color = [this.p.random(200, 255), this.p.random(200, 255), this.p.random(200, 255), this.p.random(100, 200)];
+            this.lifespan = 255;
+        }
+        update(bassKicked) {
+            this.vel.add(this.acc); this.pos.add(this.vel);
+            if (bassKicked) { let pushForce = this.pos.copy().normalize().mult(this.p.random(1, 2)); this.vel.add(pushForce); }
+            this.vel.limit(4); this.lifespan -= 1.0;
+        }
+        edges() { if (this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.85 || this.lifespan < 0) { return true; } return false; }
+        show() { this.p.noStroke(); this.p.fill(this.color[0], this.color[1], this.color[2], this.lifespan); this.p.ellipse(this.pos.x, this.pos.y, this.w); }
+    }
+
+    p5SketchInstance = new p5(sketch);
+
+    // --- Player Control Event Listeners ---
+    playerPlayPauseBtn.addEventListener('click', () => {
+        playClickSound();
+        handleGlobalUserInteraction(); 
+        
+        isPlayerGloballyPlaying = !isPlayerGloballyPlaying; 
+        if (isPlayerGloballyPlaying) {
+            if (p5SketchInstance.playCurrentSong) p5SketchInstance.playCurrentSong();
+        } else {
+            if (p5SketchInstance.pauseCurrentSong) p5SketchInstance.pauseCurrentSong();
+        }
+    });
+
+    playerNextBtn.addEventListener('click', () => {
+        playClickSound();
+        handleGlobalUserInteraction();
+        if (p5SketchInstance.playNextSong) {
+            p5SketchInstance.playNextSong();
+        }
+    });
+
+    playerPrevBtn.addEventListener('click', () => {
+        playClickSound();
+        handleGlobalUserInteraction();
+        if (p5SketchInstance.playPrevSong) {
+            p5SketchInstance.playPrevSong();
+        }
+    });
+
+    playerProgressBar.addEventListener('input', (e) => {
+        const percentage = parseFloat(e.target.value);
+        if (p5SketchInstance.seekSong && isSongLoadedAndReady) { // Only seek if song is ready
+             p5SketchInstance.seekSong(percentage);
+        }
+    });
+    playerProgressBar.addEventListener('change', (e) => { 
+        playClickSound();
+        const percentage = parseFloat(e.target.value);
+        if (p5SketchInstance.seekSong && isSongLoadedAndReady) {
+            p5SketchInstance.seekSong(percentage);
+        }
+    });
+
+
+    // --- Volume Control Logic ---
+    function updateVolumeIconDisplay(volume) {
+        if (!musicVolumeIcon) return;
+        musicVolumeIcon.classList.remove('fa-volume-up', 'fa-volume-down', 'fa-volume-mute', 'fa-volume-off'); 
+        if (volume === 0) {
+            musicVolumeIcon.classList.add('fa-volume-off'); 
+        } else if (volume < 0.01) { 
+            musicVolumeIcon.classList.add('fa-volume-mute');
+        } else if (volume < 0.5) {
+            musicVolumeIcon.classList.add('fa-volume-down');
+        } else {
+            musicVolumeIcon.classList.add('fa-volume-up');
+        }
+    }
+    
+    volumeSlider.value = lastVolumeBeforeIconClickMute;
+    updateVolumeIconDisplay(lastVolumeBeforeIconClickMute);
+
+
+    if (musicVolumeIcon && volumeSlider && p5SketchInstance) {
+        volumeSlider.addEventListener('input', (e) => {
+            const newVolume = parseFloat(e.target.value);
+            if (p5SketchInstance.setAudioVolume) {
+                p5SketchInstance.setAudioVolume(newVolume);
+            }
+            updateVolumeIconDisplay(newVolume);
+        });
+
+        volumeSlider.addEventListener('change', () => {
+            playClickSound(); 
+        });
+
+        musicVolumeIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playClickSound();
+            handleGlobalUserInteraction(); 
+
+            const currentP5Volume = p5SketchInstance.getAudioVolume ? p5SketchInstance.getAudioVolume() : parseFloat(volumeSlider.value);
+
+            if (currentP5Volume > 0) {
+                if (p5SketchInstance.setAudioVolume) p5SketchInstance.setAudioVolume(0);
+                volumeSlider.value = 0;
+                updateVolumeIconDisplay(0);
+            } else {
+                const volumeToRestore = p5SketchInstance.getLastNonZeroVolume ? p5SketchInstance.getLastNonZeroVolume() : 0.7;
+                if (p5SketchInstance.setAudioVolume) p5SketchInstance.setAudioVolume(volumeToRestore);
+                volumeSlider.value = volumeToRestore;
+                updateVolumeIconDisplay(volumeToRestore);
+            }
+        });
+    } else {
+        console.warn("Volume control elements not fully found or p5 sketch not ready for volume setup.");
+    }
 
     // --- Sound and Global Interaction ---
     function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(error => console.warn("Error playing click sound:", error)); } }
