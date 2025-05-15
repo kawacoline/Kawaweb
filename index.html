@@ -14,12 +14,41 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/addons/p5.sound.min.js"></script>
 </head>
 <body>
+    <!-- NEW Music Player Bar -->
+    <div id="music-player-bar">
+        <div id="player-album-art-container">
+            <img id="player-album-art-img" src="assets/PLAYLIST_COVERS/default_art.png" alt="Album Art">
+        </div>
+        <div id="player-track-info">
+            <div id="player-song-title">Song Title</div>
+            <div id="player-song-artist">Artist Name</div>
+        </div>
+        <div id="player-controls">
+            <button id="player-prev-btn" title="Previous"><i class="fas fa-step-backward"></i></button>
+            <button id="player-play-pause-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="player-next-btn" title="Next"><i class="fas fa-step-forward"></i></button>
+        </div>
+        <div id="player-progress-container">
+            <span id="player-current-time">0:00</span>
+            <input type="range" id="player-progress-bar" value="0" min="0" max="100" step="0.1">
+            <span id="player-total-time">0:00</span>
+        </div>
+        <div id="player-volume-controls">
+            <i id="music-volume-icon" class="fas fa-volume-up" title="Mute/Unmute"></i>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+        </div>
+    </div>
+
     <!-- Container for p5.js sketch -->
     <div id="p5-visualizer-container"></div>
 
-    <div id="music-control" title="Mutear/Desmutear Música">
-        <i class="fas fa-volume-up"></i>
+    <!-- REMOVE or COMMENT OUT the old music-control-wrapper -->
+    <!-- 
+    <div id="music-control-wrapper" style="position: fixed; top: 20px; left: 20px; z-index: 1010; display: flex; align-items: center; background-color: rgba(0,0,0,0.5); padding: 7px 9px; border-radius: 20px; border: 1px solid var(--theme-border-strong);">
+        <i id="music-volume-icon" class="fas fa-volume-up" title="Mute/Unmute" style="cursor: pointer; font-size: 1.4em; color: var(--theme-text-on-dark); transition: color var(--transition-speed), transform 0.2s;"></i>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.01" style="margin-left: 8px; width: 100px; cursor: pointer;">
     </div>
+    -->
 
     <div class="content-wrapper">
         <div class="main-container">
@@ -108,7 +137,7 @@ You can find my commissions info, likes & art gallery in this website</p>
             </details>
         </div>
     </div>
-
+    
     <div id="contact-modal" class="modal">
         <div class="modal-header"><span class="modal-title">Contact</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
         <div class="modal-content">
@@ -122,8 +151,7 @@ You can find my commissions info, likes & art gallery in this website</p>
     </div>
 
     <audio id="clickSound" src="assets/click.mp3" preload="auto"></audio>
-    <!-- Background music audio tag is no longer needed here, p5.sound will handle it -->
-
+    
     <script src="script.js"></script>
 </body>
 </html>

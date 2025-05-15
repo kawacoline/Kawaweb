@@ -297,3 +297,218 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 .work-top-banner a { font-weight: bold; }
 
 .loading-placeholder { text-align: center; padding: 20px; opacity: 0.7; }
+
+/* --- Music Player Bar Styles --- */
+#music-player-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px; /* Adjust as needed */
+    background-color: #111111; /* Darker background */
+    color: var(--theme-text-on-dark);
+    display: flex;
+    align-items: center;
+    padding: 0 15px; /* Slightly reduced padding */
+    box-sizing: border-box;
+    z-index: 950; /* Below modals, above p5 canvas */
+    border-bottom: 1px solid var(--theme-border-strong);
+    gap: 10px; /* Gap between main sections of the player */
+}
+
+#player-album-art-container {
+    flex-shrink: 0;
+}
+
+#player-album-art-img {
+    width: 48px; /* Slightly smaller */
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block; /* Removes any bottom space if it's inline */
+}
+
+#player-track-info {
+    flex: 0 1 200px; /* flex-grow, flex-shrink, flex-basis */
+    min-width: 100px; 
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+#player-song-title {
+    font-size: 0.85em; /* Slightly smaller */
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--theme-text-on-dark);
+}
+
+#player-song-artist {
+    font-size: 0.75em; /* Slightly smaller */
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--theme-text-on-dark);
+}
+
+#player-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Slightly reduced gap */
+    flex-shrink: 0;
+}
+
+#player-controls button {
+    background: none;
+    border: none;
+    color: var(--theme-text-on-dark);
+    font-size: 1.1em; /* Adjust icon size */
+    padding: 5px;
+    line-height: 1; /* Helps with vertical alignment of icons */
+    cursor: pointer;
+    transition: color 0.15s, transform 0.15s;
+}
+#player-controls button:hover {
+    color: var(--theme-accent-primary);
+    transform: scale(1.1);
+}
+#player-controls button#player-play-pause-btn {
+    font-size: 1.5em; /* Make play/pause button bigger */
+}
+#player-controls button#player-play-pause-btn i {
+    display: block; /* Helps with centering if icon has weird spacing */
+}
+
+
+#player-progress-container {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto; /* Allow progress bar to take up significant space */
+    min-width: 150px;
+    max-width: 500px; /* Or some other max-width */
+    margin: 0 10px; /* Reduced margin */
+}
+
+#player-progress-container span {
+    font-size: 0.75em; /* Slightly smaller */
+    opacity: 0.6;
+    min-width: 32px; /* for 0:00 */
+    text-align: center;
+    color: var(--theme-text-on-dark);
+}
+
+#player-progress-bar {
+    flex-grow: 1;
+    margin: 0 8px; /* Slightly reduced margin */
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 5px; /* Slightly thicker */
+    background: #333; /* Darker track */
+    border-radius: 2.5px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+#player-progress-bar:hover {
+    background: #444;
+}
+
+#player-progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px; /* Slightly larger thumb */
+    height: 12px;
+    background: var(--theme-text-on-dark); /* Start with text color */
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+#player-progress-bar:hover::-webkit-slider-thumb {
+    background: var(--theme-accent-primary);
+}
+
+#player-progress-bar::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--theme-text-on-dark);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s;
+}
+#player-progress-bar:hover::-moz-range-thumb {
+    background: var(--theme-accent-primary);
+}
+
+
+#player-volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#player-volume-controls #music-volume-icon {
+    cursor: pointer;
+    font-size: 1.1em; /* Consistent with other icons */
+    color: var(--theme-text-on-dark);
+    transition: color var(--transition-speed), transform 0.2s;
+    padding: 5px;
+}
+#player-volume-controls #music-volume-icon:hover {
+    color: var(--theme-accent-hover);
+    transform: scale(1.1);
+}
+
+#player-volume-controls #volume-slider {
+    width: 80px; /* Slightly reduced width */
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px; /* Match progress bar track height */
+    background: #333; /* Match progress bar track */
+    border-radius: 2.5px;
+    outline: none;
+    transition: background 0.15s;
+}
+#player-volume-controls #volume-slider:hover {
+     background: #444;
+}
+
+#player-volume-controls #volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px; 
+  height: 10px;
+  background: var(--theme-text-on-dark); 
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#player-volume-controls #volume-slider:hover::-webkit-slider-thumb {
+  background: var(--theme-accent-primary);
+}
+#player-volume-controls #volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: var(--theme-text-on-dark);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+#player-volume-controls #volume-slider:hover::-moz-range-thumb {
+  background: var(--theme-accent-primary);
+}
+
+/* Adjust content wrapper to not be hidden by the player bar */
+.content-wrapper {
+    padding-top: 85px; /* player bar height (70px) + some margin (15px) */
+    /* transform: scale(1.4) is already there, that's fine */
+}
+
+/* Ensure the original music control wrapper styling (if any remains or is accidentally un-commented) doesn't interfere */
+/* #music-control-wrapper { display: none !important; } */ /* This line can be added if you are absolutely sure the HTML for it is removed */
