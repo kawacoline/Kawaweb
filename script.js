@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let p5SketchInstance;
     let lastVolumeBeforeIconClickMute = 0.7; // Default starting volume for p5 sketch
 
-    // --- Playlist Definition ---
+    // --- Playlist Definition y Player ---
     // (Todo el bloque de definición de playlist, variables de control, y funciones del reproductor de audio)
-    // --- MOVER TODO ESTO A audioPlayer.js ---
+    // --- MOVIDO a audioPlayer.js ---
 
     // --- Work Section Data (Sin cambios) ---
     const workData = [
@@ -292,11 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Music Player UI Update Functions ---
     // (Todas las funciones de UI del reproductor, eventos de botones, control de volumen, etc.)
-    // --- MOVER TODO ESTO A audioPlayer.js ---
+    // --- MOVIDO a audioPlayer.js ---
 
     // --- p5.js Sketch Definition ---
     // (Todo el bloque de definición de sketch, clase Particle, y lógica de visualización)
-    // --- MOVER TODO ESTO A audioVisualizer.js ---
+    // --- MOVIDO a audioVisualizer.js ---
 
     // --- El resto de la lógica de modales y utilidades permanece aquí ---
 
