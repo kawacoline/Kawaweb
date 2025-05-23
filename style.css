@@ -1,3 +1,4 @@
+
 :root {
     --theme-bg-page: #0a0a0a;
     --theme-main-container-bg: #1c1c1c;
@@ -21,37 +22,29 @@ body {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background-color: var(--theme-bg-page);
     color: var(--theme-text-on-dark);
-    transform: none; /* Remove zoom */
-    transform-origin: initial; /* Reset origin */
+    transform: none; 
+    transform-origin: initial; 
     cursor: auto; 
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none;    /* Firefox */
-    -ms-user-select: none;     /* Internet Explorer/Edge */
-    user-select: none;         /* Standard */
+    -webkit-user-select: none; 
+    -moz-user-select: none;    
+    -ms-user-select: none;     
+    user-select: none;         
 }
 
-/* NEW: p5.js Canvas Container */
 #p5-visualizer-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1; /* Behind everything else */
-    pointer-events: none; /* Allow clicks to pass through to content below */
+    z-index: -1; 
+    pointer-events: none; 
 }
-#p5-visualizer-container canvas { /* Style the canvas p5 creates */
-    display: block; /* Remove any default spacing */
+#p5-visualizer-container canvas { 
+    display: block; 
 }
 
-/* REMOVE or COMMENT OUT these old styles: */
-/*
-#customCursorCanvas { ... }
-#particle-container { ... }
-.particle { ... }
-#audioVisualizerCanvas { ... }
-*/
-
+/* Estilos para el antiguo control de música, se dejan por si se usan en algún sitio, pero el nuevo es #music-player-bar */
 #music-control {
     position: fixed; top: 20px; left: 20px; font-size: 1.4em;
     color: var(--theme-text-on-dark);
@@ -76,8 +69,12 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
     position: relative; z-index: 10; 
-    transform: scale(1.4); /* AUMENTADO - ajusta este valor según necesites (e.g., 1.3, 1.5) */
+    transform: scale(1.4); 
     transform-origin: center center;
+    /* --- MODIFICADO para Punto 3: Asegurar espacio para la barra de reproductor --- */
+    /* Esta propiedad ya existía y es correcta para dejar espacio arriba. */
+    padding-top: 85px; /* player bar height (70px) + some margin (15px) */
+    /* --- FIN DE MODIFICADO --- */
 }
 
 .main-container {
@@ -96,7 +93,7 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     border-radius: 50%; display: flex; justify-content: center; align-items: center;
     margin: -60px auto 20px auto;
     position: relative; z-index: 2; overflow: hidden;
-    transform: scale(1.2); /* Scale profile picture */
+    transform: scale(1.2); 
     transform-origin: center center;
 }
 .profile-picture-placeholder img { width: 100%; height: 100%; object-fit: cover; }
@@ -136,20 +133,18 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     min-width: 300px; width: clamp(320px, 60%, 750px); max-height: 85vh; 
     transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
     display: flex; flex-direction: column; overflow: hidden;
-    transform: scale(1.2); /* Scale modals */
+    /* transform: scale(1.2); */ /* Esta línea fue eliminada de .modal para no afectar el drag */
     transform-origin: center center;
 }
 .modal.active {
     visibility: visible; opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(1); /* Ajustado para que el drag funcione bien desde el centro */
     transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s linear 0s;
 }
 
-/* NUEVO: Estilo para cuando se está arrastrando */
 .modal.dragging {
-    /* Anular el transform de .active para evitar el centrado durante el arrastre */
-    transform: scale(1) !important; /* Solo queremos mantener la escala */
-    transition: none !important; /* Evitar transiciones durante el arrastre */
+    transform: scale(1) !important; /* Solo queremos mantener la escala original (1) durante el arrastre */
+    transition: none !important; 
 }
 
 .modal-header {
@@ -304,39 +299,57 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     top: 0;
     left: 0;
     width: 100%;
-    height: 70px; /* Adjust as needed */
-    background-color: #111111; /* Darker background */
+    height: 70px; 
+    background-color: #111111; 
     color: var(--theme-text-on-dark);
     display: flex;
-    align-items: center;
-    padding: 0 15px; /* Slightly reduced padding */
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 0 15px; 
     box-sizing: border-box;
-    z-index: 950; /* Below modals, above p5 canvas */
+    z-index: 950; 
     border-bottom: 1px solid var(--theme-border-strong);
-    gap: 10px; /* Gap between main sections of the player */
+    /* gap: 10px; */ /* Eliminado/Comentado, ya que space-between maneja el espaciado principal */
+    
+    /* --- AÑADIDO para Punto 3: Inicialmente ocultar la barra del reproductor --- */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-100%); /* Efecto opcional de deslizamiento desde arriba */
+    transition: visibility 0s linear 0.3s, opacity 0.3s ease-out, transform 0.3s ease-out;
+    /* --- FIN DE AÑADIDO --- */
 }
+
+/* --- AÑADIDO para Punto 3: Clase para mostrar la barra del reproductor cuando esté lista --- */
+#music-player-bar.ready {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0s; /* Anula el retraso de la transición para mostrarla inmediatamente */
+}
+/* --- FIN DE AÑADIDO --- */
+
 
 #player-album-art-container {
     flex-shrink: 0;
 }
 
 #player-album-art-img {
-    width: 48px; /* Slightly smaller */
+    width: 48px; 
     height: 48px;
     object-fit: cover;
     border-radius: 4px;
-    display: block; /* Removes any bottom space if it's inline */
+    display: block; 
 }
 
 #player-track-info {
-    flex: 0 1 200px; /* flex-grow, flex-shrink, flex-basis */
+    flex: 0 1 200px; 
     min-width: 100px; 
     overflow: hidden;
     margin-right: 10px;
 }
 
 #player-song-title {
-    font-size: 0.85em; /* Slightly smaller */
+    font-size: 0.85em; 
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -345,7 +358,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 
 #player-song-artist {
-    font-size: 0.75em; /* Slightly smaller */
+    font-size: 0.75em; 
     opacity: 0.6;
     white-space: nowrap;
     overflow: hidden;
@@ -356,7 +369,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #player-controls {
     display: flex;
     align-items: center;
-    gap: 12px; /* Slightly reduced gap */
+    gap: 12px; 
     flex-shrink: 0;
 }
 
@@ -364,9 +377,9 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     background: none;
     border: none;
     color: var(--theme-text-on-dark);
-    font-size: 1.1em; /* Adjust icon size */
+    font-size: 1.1em; 
     padding: 5px;
-    line-height: 1; /* Helps with vertical alignment of icons */
+    line-height: 1; 
     cursor: pointer;
     transition: color 0.15s, transform 0.15s;
 }
@@ -375,38 +388,38 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     transform: scale(1.1);
 }
 #player-controls button#player-play-pause-btn {
-    font-size: 1.5em; /* Make play/pause button bigger */
+    font-size: 1.5em; 
 }
 #player-controls button#player-play-pause-btn i {
-    display: block; /* Helps with centering if icon has weird spacing */
+    display: block; 
 }
 
 
 #player-progress-container {
     display: flex;
     align-items: center;
-    flex: 1 1 auto; /* Allow progress bar to take up significant space */
-    min-width: 150px;
-    max-width: 500px; /* Or some other max-width */
-    margin: 0 10px; /* Reduced margin */
+    flex: 1 1 auto;   
+    min-width: 150px; 
+    max-width: 500px;  
+    margin: 0 5px;  
 }
 
 #player-progress-container span {
-    font-size: 0.75em; /* Slightly smaller */
+    font-size: 0.75em; 
     opacity: 0.6;
-    min-width: 32px; /* for 0:00 */
+    min-width: 32px; 
     text-align: center;
     color: var(--theme-text-on-dark);
 }
 
 #player-progress-bar {
     flex-grow: 1;
-    margin: 0 8px; /* Slightly reduced margin */
+    margin: 0 8px; 
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 5px; /* Slightly thicker */
-    background: #333; /* Darker track */
+    height: 5px; 
+    background: #333; 
     border-radius: 2.5px;
     outline: none;
     cursor: pointer;
@@ -419,9 +432,9 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #player-progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px; /* Slightly larger thumb */
+    width: 12px; 
     height: 12px;
-    background: var(--theme-text-on-dark); /* Start with text color */
+    background: var(--theme-text-on-dark); 
     border-radius: 50%;
     cursor: pointer;
     transition: background 0.15s;
@@ -451,9 +464,9 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     flex-shrink: 0;
 }
 
-#player-volume-controls #music-volume-icon {
+#player-volume-controls #music-volume-icon { /* Este es el icono de volumen en la nueva barra */
     cursor: pointer;
-    font-size: 1.1em; /* Consistent with other icons */
+    font-size: 1.1em; 
     color: var(--theme-text-on-dark);
     transition: color var(--transition-speed), transform 0.2s;
     padding: 5px;
@@ -463,13 +476,13 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     transform: scale(1.1);
 }
 
-#player-volume-controls #volume-slider {
-    width: 80px; /* Slightly reduced width */
+#player-volume-controls #volume-slider { /* Este es el slider de volumen en la nueva barra */
+    width: 80px; 
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    height: 5px; /* Match progress bar track height */
-    background: #333; /* Match progress bar track */
+    height: 5px; 
+    background: #333; 
     border-radius: 2.5px;
     outline: none;
     transition: background 0.15s;
@@ -503,12 +516,3 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #player-volume-controls #volume-slider:hover::-moz-range-thumb {
   background: var(--theme-accent-primary);
 }
-
-/* Adjust content wrapper to not be hidden by the player bar */
-.content-wrapper {
-    padding-top: 85px; /* player bar height (70px) + some margin (15px) */
-    /* transform: scale(1.4) is already there, that's fine */
-}
-
-/* Ensure the original music control wrapper styling (if any remains or is accidentally un-commented) doesn't interfere */
-/* #music-control-wrapper { display: none !important; } */ /* This line can be added if you are absolutely sure the HTML for it is removed */
