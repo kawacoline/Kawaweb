@@ -17,7 +17,8 @@
     <!-- NEW Music Player Bar -->
     <div id="music-player-bar">
         <div id="player-album-art-container">
-            <img id="player-album-art-img" src="assets/PLAYLIST_COVERS/default_art.png" alt="Album Art">
+            <!-- MODIFIED PATH for default_art.png -->
+            <img id="player-album-art-img" src="assets/SONGS_COVERS/default_art.png" alt="Album Art">
         </div>
         <div id="player-track-info">
             <div id="player-song-title">Song Title</div>
@@ -37,6 +38,11 @@
             <i id="music-volume-icon" class="fas fa-volume-up" title="Mute/Unmute"></i>
             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
         </div>
+    </div>
+
+    <!-- ADDED Container for Background Video -->
+    <div id="background-video-container">
+        <video id="background-video-player" preload="metadata" muted loop></video>
     </div>
 
     <!-- Container for p5.js sketch -->
