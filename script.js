@@ -14,6 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicVolumeIcon = document.getElementById('music-volume-icon');
 
     const playlistData = [
+        { title: "駿", artist: "Nhelv / Silentroom", 
+          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396118/xtlnbonlqhgycnfgluhj.webm", 
+          albumArtPath: "assets/SONGS_COVERS/駿_cover.jpg" },
+        { title: "Rainshower", artist: "Silentroom × Shun", 
+          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396759/%E9%A9%9F%E9%9B%A8%E3%81%AE%E7%8B%AD%E9%96%93_Rainshower_Silentroom_Shun_720p_tmtjhf.webm", 
+          albumArtPath: "assets/SONGS_COVERS/rainshowe_cover.jpeg" },
         { title: "Aegleseeker", artist: "Silentroom vs Frums", 
           filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748395211/d3snqsjythwmwnszdpe0.mp4", 
           albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg" },
