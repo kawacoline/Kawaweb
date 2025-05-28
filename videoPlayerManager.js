@@ -129,45 +129,52 @@ const videoPlayerManager = {
     },
 
     _createAndConnectMediaElement: function(p5_instance) {
-        if (!this.player.currentSrc) { // Doble verificación
+        if (!this.player.currentSrc) {
             console.warn("VideoPlayerManager: _createAndConnectMediaElement llamado sin currentSrc en el player.");
             return;
         }
-        // Crear p5.MediaElement solo si no existe o el elemento subyacente es diferente
-        if (!this.p5MediaElement || this.p5MediaElement.elt !== this.player) {
-            console.log("Video Player Manager: Creando nueva instancia de p5.MediaElement.");
-            try {
-                // ***** MODIFIED SECTION START *****
-                // Use the p5.MediaElement constructor directly.
-                // Prefer global p5 if available, otherwise use p5_instance.constructor
-                if (typeof p5 !== 'undefined' && typeof p5.MediaElement === 'function') {
-                    this.p5MediaElement = new p5.MediaElement(this.player, p5_instance);
-                } else if (p5_instance && p5_instance.constructor && typeof p5_instance.constructor.MediaElement === 'function') {
-                    this.p5MediaElement = new p5_instance.constructor.MediaElement(this.player, p5_instance);
-                } else {
-                    console.error("Video Player Manager: p5.MediaElement constructor not found.");
-                    // This error will be caught by the try-catch block below, 
-                    // which then calls disconnectAudioSource ensuring the visualizer doesn't hang.
-                    throw new Error("p5.MediaElement constructor not found."); 
-                }
-                // ***** MODIFIED SECTION END *****
-                console.log("Video Player Manager: p5.MediaElement creado.");
 
-            } catch (e) {
-                console.error("Error al crear p5.MediaElement:", e);
-                if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
-                return; // Important to return if creation failed
+        try {
+            // Si ya existe un p5MediaElement Y está asociado con el MISMO this.player HTML element
+            // Y ese p5MediaElement es una instancia de p5.MediaElement (lo que implica que ya pasó por esta lógica antes)
+            // Intenta desconectarlo antes de crear uno nuevo para el mismo this.player.
+            // Esto es para intentar prevenir el "HTMLMediaElement already connected previously".
+            if (this.p5MediaElement && this.p5MediaElement.elt === this.player && typeof this.p5MediaElement.disconnect === 'function') {
+                console.log("Video Player Manager: Desconectando p5MediaElement existente del mismo HTMLVideoElement antes de recrear.");
+                this.p5MediaElement.disconnect(); // Desconecta del pipeline de p5.sound
+                // Aunque disconnectAudioSource en el visualizador también lo llama,
+                // hacerlo aquí justo antes de la recreación es más directo para este problema.
             }
+            // Y ahora, nos aseguramos de anular la referencia *antes* de intentar crear una nueva
+            // para que no se confunda con el anterior si la desconexión no fue "total" para el GC.
+            this.p5MediaElement = null;
+
+            console.log("Video Player Manager: Creando nueva instancia de p5.MediaElement.");
+            if (typeof p5 !== 'undefined' && typeof p5.MediaElement === 'function') {
+                this.p5MediaElement = new p5.MediaElement(this.player, p5_instance);
+            } else if (p5_instance && p5_instance.constructor && typeof p5_instance.constructor.MediaElement === 'function') {
+                this.p5MediaElement = new p5_instance.constructor.MediaElement(this.player, p5_instance);
+            } else {
+                console.error("Video Player Manager: p5.MediaElement constructor not found.");
+                throw new Error("p5.MediaElement constructor not found.");
+            }
+            console.log("Video Player Manager: p5.MediaElement creado.");
+
+        } catch (e) {
+            console.error("Error al crear/reconectar p5.MediaElement:", e); // Mensaje de error más específico
+            // El error "InvalidStateError" probablemente ocurrirá aquí.
+            if (this.audioVisualizerInstance) {
+                // Si la creación falla, nos aseguramos que el visualizador sepa que no hay fuente
+                this.audioVisualizerInstance.disconnectAudioSource();
+            }
+            this.p5MediaElement = null; // Asegurarse de que esté nulo si falló
+            return;
         }
-        
-        // Ensure p5MediaElement was actually created before trying to connect it
+
         if (this.audioVisualizerInstance && this.p5MediaElement) {
             this.audioVisualizerInstance.connectAudioSource(this.p5MediaElement);
         } else {
-            // This path could be reached if p5MediaElement creation failed and returned,
-            // or if this.audioVisualizerInstance is null for some reason.
             console.warn("Video Player Manager: No se pudo conectar al visualizador (instancia o mediaElement faltante después del intento de creación).");
-            // Ensure we disconnect if we couldn't connect, especially if p5MediaElement is null from a failed creation
             if (this.audioVisualizerInstance && !this.p5MediaElement) {
                  this.audioVisualizerInstance.disconnectAudioSource();
             }
