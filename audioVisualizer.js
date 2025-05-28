@@ -17,12 +17,18 @@ const audioVisualizer = {
             console.error("Audio Visualizer: p5 instance not available for connectAudioSource.");
             return;
         }
-        if (!p5MediaElement || !p5MediaElement.elt) {
+        if (!p5MediaElement || !p5MediaElement.elt) { // .elt es el elemento HTML subyacente
             console.warn("Audio Visualizer: Invalid p5MediaElement for connection.");
             this.disconnectAudioSource(); 
             return;
         }
-        this.mediaElementSource = p5MediaElement;
+        this.mediaElementSource = p5MediaElement; // Guardar la instancia p5.MediaElement
+        
+        if (!this.fft && this.p5Instance) { // Crear FFT si no existe
+             this.fft = new this.p5Instance.constructor.FFT(0.8, 256);
+             console.log("Audio Visualizer: FFT created on demand.");
+        }
+
         if (this.fft) {
             this.fft.setInput(this.mediaElementSource);
             console.log("Audio Visualizer: FFT input connected to p5.MediaElement.");
@@ -38,18 +44,38 @@ const audioVisualizer = {
 
     disconnectAudioSource: function() {
         console.log("Audio Visualizer: Attempting to disconnect audio source.");
-        if (this.fft) this.fft.setInput(null);
-        this.mediaElementSource = null; // Importante resetear
-        this.isDrawing = false; 
+        if (this.fft) {
+            this.fft.setInput(null); // Desconectar FFT de la fuente actual
+            console.log("Audio Visualizer: FFT input explicitly set to null.");
+        }
+
+        // Importante: Si mediaElementSource es una instancia de p5.MediaElement,
+        // p5.sound podría tener referencias internas a ella.
+        // Aunque no hay un método 'dispose()' estándar en p5.MediaElement como en otros objetos de p5.sound,
+        // anular la referencia y asegurarse de que el FFT no la use es clave.
+        // p5.MediaElement sí tiene un método .disconnect() que lo desconecta del master output
+        // y de cualquier cosa a la que estuviera conectado (como un FFT).
+        if (this.mediaElementSource) {
+            if (typeof this.mediaElementSource.disconnect === 'function') {
+                this.mediaElementSource.disconnect(); // Desconecta del pipeline de p5.sound (master, FFTs)
+                console.log("Audio Visualizer: Called .disconnect() on existing p5.MediaElement source.");
+            }
+            this.mediaElementSource = null; // Eliminar la referencia al antiguo p5.MediaElement
+            console.log("Audio Visualizer: this.mediaElementSource set to null.");
+        }
+
+        this.isDrawing = false;
         if (this.p5Instance && this.p5Instance.isLooping()) {
             this.p5Instance.noLoop();
             console.log("Audio Visualizer: p5 loop stopped.");
-        }
-        if (this.p5Instance && typeof this.p5Instance.clear === 'function') {
-            try {
-                this.p5Instance.clear();
-            } catch (e) {
-                console.warn("Error clearing canvas during disconnect:", e);
+            // Solo limpiar si el loop se detuvo y no hay intención de redibujar inmediatamente.
+            if (this.p5Instance && typeof this.p5Instance.clear === 'function') {
+                try {
+                    this.p5Instance.clear(); // Limpiar el canvas
+                    console.log("Audio Visualizer: Canvas cleared after stopping loop.");
+                } catch (e) {
+                    console.warn("Error clearing canvas during disconnect:", e);
+                }
             }
         }
     },
@@ -68,14 +94,13 @@ const audioVisualizer = {
                 p.angleMode(p.DEGREES);
                 console.log("Audio Visualizer: Angle mode set.");
                 
-                // No es necesario p.soundFormats() aquí si usamos MediaElement del video
-                
-                audioVisualizer.fft = new p5.FFT(0.8, 256); 
-                console.log("Audio Visualizer: FFT created.");
+                // El FFT se crea ahora en connectAudioSource si es necesario, o aquí si se prefiere tenerlo siempre
+                // audioVisualizer.fft = new p5.FFT(0.8, 256); 
+                // console.log("Audio Visualizer: FFT created in setup.");
                 
                 audioVisualizer.p5SetupDone = true;
                 console.log("Audio Visualizer: p5 setup completed successfully. p5SetupDone is true.");
-                p.noLoop(); 
+                p.noLoop(); // Empezar sin loopear, se activa cuando hay audio
             } catch (error) {
                 console.error("Audio Visualizer: ERROR DURING p5.setup():", error);
                 audioVisualizer.p5SetupDone = false;
@@ -84,28 +109,34 @@ const audioVisualizer = {
 
         p.draw = () => {
             if (!audioVisualizer.isDrawing || 
-                !audioVisualizer.mediaElementSource || 
-                !videoPlayerManager.player || // Verificar que el player HTML exista
+                !audioVisualizer.mediaElementSource || // Comprobar si la fuente MediaElement está seteada
+                !videoPlayerManager.player || 
                 videoPlayerManager.player.paused ||
                 videoPlayerManager.player.ended ||
-                !audioVisualizer.fft) { // Verificar que FFT exista
+                !audioVisualizer.fft) { // Comprobar si FFT está inicializado
                 
-                if (audioVisualizer.isDrawing && p.isLooping()) { 
-                     if(p && typeof p.clear === 'function') p.clear();
+                // Si se supone que no debe dibujar pero p5 sigue loopeando, detenerlo.
+                if (p.isLooping() && !audioVisualizer.isDrawing) {
+                     p.noLoop();
+                     p.clear(); // Limpiar el último frame
                 }
                 return; 
             }
-            if(p && !p.isLooping()) p.loop();
+            // Si se supone que debe dibujar pero p5 no loopea, iniciarlo.
+            if (!p.isLooping() && audioVisualizer.isDrawing) {
+                p.loop();
+            }
 
-            if(p && typeof p.clear === 'function') p.clear();
+            p.clear(); // Limpiar canvas en cada frame
 
             audioVisualizer.fft.analyze();
-            let wave = audioVisualizer.fft.waveform();
+            let wave = audioVisualizer.fft.waveform(); 
             let bassEnergy = audioVisualizer.fft.getEnergy("bass");
 
             p.push();
             p.translate(p.width / 2, p.height / 2);
 
+            // Lógica de partículas
             if (bassEnergy > 150 && audioVisualizer.particles.length < 150) {
                 for (let i = 0; i < p.random(0, 2); i++) audioVisualizer.particles.push(new Particle(p));
             }
@@ -116,6 +147,7 @@ const audioVisualizer = {
                 } else audioVisualizer.particles.splice(i, 1);
             }
             
+            // Dibujo de la onda
             p.stroke(255, 255, 255, 200);
             p.strokeWeight(2.5);
             p.noFill();
@@ -124,12 +156,12 @@ const audioVisualizer = {
 
             for (let t = -1; t <= 1; t += 2) {
                 p.beginShape();
-                for (let i = 0; i <= 180; i += 1.5) {
-                    if (wave && wave.length > 0) { // Verificar que wave no esté vacío
+                for (let i = 0; i <= 180; i += 1.5) { 
+                    if (wave && wave.length > 0) { 
                         let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
-                        index = p.constrain(index, 0, wave.length -1); // Asegurar que el índice es válido
-                        let r = p.map(wave[index], -1, 1, rBase - rRange, rBase + rRange); 
-                        p.vertex(r * p.sin(i) * t, r * p.cos(i));
+                        index = p.constrain(index, 0, wave.length -1); 
+                        let rVal = p.map(wave[index], -1, 1, rBase - rRange, rBase + rRange); 
+                        p.vertex(rVal * p.sin(i) * t, rVal * p.cos(i));
                     }
                 }
                 p.endShape();
@@ -141,10 +173,11 @@ const audioVisualizer = {
             if (p && typeof p.resizeCanvas === 'function') p.resizeCanvas(p.windowWidth, p.windowHeight);
         };
 
+        // Clase Particle (sin cambios)
         class Particle { 
             constructor(pInstance) { this.p = pInstance; this.pos = this.p.createVector(0,0); this.vel = p5.Vector.random2D().mult(this.p.random(0.5,2)); this.acc = p5.Vector.random2D().mult(this.p.random(0.005,0.02)); this.w = this.p.random(1.5,4); this.color = [this.p.random(200,255),this.p.random(200,255),this.p.random(200,255),this.p.random(80,180)]; this.lifespan = 200; }
             update(bassKicked) { this.vel.add(this.acc); this.pos.add(this.vel); if(bassKicked) { let push = this.pos.copy().normalize().mult(this.p.random(0.5,1.5)); this.vel.add(push); } this.vel.limit(3); this.lifespan -= 1.5; }
-            edges() { return this.p && this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.75 || this.lifespan < 0; } // Verificar this.p
+            edges() { return this.p && this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.75 || this.lifespan < 0; } 
             show() { if(this.p) {this.p.noStroke(); this.p.fill(this.color[0],this.color[1],this.color[2],this.lifespan); this.p.ellipse(this.pos.x,this.pos.y,this.w);} }
         }
     } 

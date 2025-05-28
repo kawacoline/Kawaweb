@@ -33,6 +33,34 @@ Este portfolio es una web personal con temática oscura, animaciones, ventanas m
 - **Sonidos** para clics e interacción.
 - **Soporte para playlist**: puedes agregar más canciones en la carpeta `assets/PLAYLIST`.
 
+## Descripción del Proyecto
+
+Este proyecto es un portfolio interactivo que combina ilustración, animación, diseño web y desarrollo de aplicaciones. Está diseñado para mostrar las habilidades y proyectos de Kawacoline de una manera visualmente atractiva e interactiva.
+
+### Características Principales
+
+1. **Visualizador de Audio**: Utiliza la biblioteca `p5.js` para crear un visualizador de audio interactivo que responde a la música reproducida.
+2. **Reproductor de Música**: Incluye un reproductor de música con controles de reproducción, pausa, volumen y navegación entre canciones.
+3. **Modales Interactivos**: Ventanas modales que muestran información sobre herramientas, proyectos, ilustraciones y animaciones.
+4. **Galería de Imágenes**: Una galería que presenta ilustraciones y diseños visuales.
+5. **Integración de Videos**: Reproducción de videos directamente desde YouTube.
+6. **Diseño Responsivo**: Adaptado para diferentes tamaños de pantalla y dispositivos.
+
+### Tecnologías Utilizadas
+
+- **HTML5**: Estructura del contenido.
+- **CSS3**: Estilización y diseño visual.
+- **JavaScript**: Lógica e interactividad.
+- **p5.js**: Visualización de audio.
+- **Cloudinary**: Almacenamiento y entrega de archivos multimedia.
+
+### Cómo Funciona
+
+- **Interacción Global**: El sitio detecta interacciones globales del usuario (clics o teclas) para activar el contexto de audio y garantizar una experiencia fluida.
+- **Reproductor de Música**: Gestiona una lista de reproducción con canciones y sus respectivas carátulas.
+- **Modales**: Permiten mostrar información detallada sobre diferentes secciones del portfolio, como herramientas utilizadas, proyectos destacados y más.
+- **Galería y Videos**: Presenta ilustraciones y animaciones en un formato atractivo y accesible.
+
 ## Cómo usar
 
 1. Clona o descarga este repositorio en tu PC.

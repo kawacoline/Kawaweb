@@ -7,7 +7,7 @@ const videoPlayerManager = {
     isGloballyPlaying: false,
     isUserDraggingProgressBar: false,
     p5MediaElement: null,
-    audioVisualizerInstance: null, // Referencia al objeto audioVisualizer
+    audioVisualizerInstance: null,
 
     uiPlayerAlbumArtImg: null,
     uiPlayerSongTitle: null,
@@ -27,7 +27,7 @@ const videoPlayerManager = {
         }
 
         this.playlist = config.playlist || [];
-        this.audioVisualizerInstance = config.audioVisualizer;
+        this.audioVisualizerInstance = config.audioVisualizer; // Guardar referencia al objeto visualizador
 
         this.uiPlayerAlbumArtImg = document.getElementById('player-album-art-img');
         this.uiPlayerSongTitle = document.getElementById('player-song-title');
@@ -48,8 +48,8 @@ const videoPlayerManager = {
             this.lastVolumeBeforeMute = 0.7;
         }
         
-        this.player.loop = false;
-        this.player.autoplay = false;
+        this.player.loop = false; // La lógica de playlist maneja la repetición o el siguiente
+        this.player.autoplay = false; // Controlamos la reproducción explícitamente
 
         this.player.addEventListener('loadedmetadata', this.handleMetadata.bind(this));
         this.player.addEventListener('timeupdate', this.handleTimeUpdate.bind(this));
@@ -67,7 +67,7 @@ const videoPlayerManager = {
         });
 
         if (this.playlist.length > 0) {
-            this.loadSong(0, false);
+            this.loadSong(0, false); // Cargar la primera canción, no reproducir inmediatamente
         } else {
             this.updateTrackInfoUI(null);
             if(this.uiPlayerProgressBar) this.uiPlayerProgressBar.disabled = true;
@@ -78,10 +78,15 @@ const videoPlayerManager = {
     },
 
     connectToP5AudioSystem: function() {
-        if (!this.audioVisualizerInstance || !this.audioVisualizerInstance.p5Instance || !this.player.currentSrc) {
-            console.warn("Video Player Manager: p5 instance o video src no disponibles para conectar visualizador.");
+        if (!this.audioVisualizerInstance || !this.audioVisualizerInstance.p5Instance) {
+            console.warn("Video Player Manager: Instancia de p5 del visualizador no disponible para conectar.");
             if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
             return;
+        }
+        if (!this.player.currentSrc) { // No intentar conectar si no hay video cargado
+             console.warn("Video Player Manager: No hay video cargado (currentSrc), no se puede conectar a p5.");
+             if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+             return;
         }
 
         const p5_instance = this.audioVisualizerInstance.p5Instance;
@@ -90,55 +95,83 @@ const videoPlayerManager = {
         if (typeof p5_instance.getAudioContext === 'function') {
              p5AudioCtx = p5_instance.getAudioContext();
         } else {
-            console.error("Video Player Manager: p5_instance.getAudioContext no es una función. p5.sound puede no estar listo o accesible.");
+            console.error("Video Player Manager: p5_instance.getAudioContext no es una función.");
             if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
             return;
         }
         
-        try {
-            if (p5AudioCtx && p5AudioCtx.state === 'suspended') {
-                console.warn("Video Player Manager: AudioContext de p5 suspendido. Intentando reanudar...");
-                p5AudioCtx.resume().then(() => {
-                    console.log("Video Player Manager: AudioContext de p5 reanudado.");
-                    this._createAndConnectMediaElement(p5_instance);
-                }).catch(err => {
-                    console.error("Video Player Manager: Error reanudando AudioContext de p5.", err);
-                    if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
-                });
-            } else if (p5AudioCtx && p5AudioCtx.state === 'running') {
-                console.log("Video Player Manager: AudioContext de p5 ya está 'running'.");
+        const attemptConnection = () => {
+            try {
+                console.log("Video Player Manager: Intentando _createAndConnectMediaElement.");
                 this._createAndConnectMediaElement(p5_instance);
-            } else {
-                 console.error("Video Player Manager: No se pudo obtener un AudioContext válido de p5 o está cerrado. Estado:", p5AudioCtx ? p5AudioCtx.state : "Contexto nulo");
-                 if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+            } catch (error) {
+                console.error("Video Player Manager: Error en _createAndConnectMediaElement:", error);
+                if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
             }
-        } catch (error) {
-            console.error("Video Player Manager: Error general al conectar con p5.MediaElement:", error);
-            if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+        };
+
+        if (p5AudioCtx && p5AudioCtx.state === 'suspended') {
+            console.warn("Video Player Manager: AudioContext de p5 suspendido. Intentando reanudar...");
+            p5AudioCtx.resume().then(() => {
+                console.log("Video Player Manager: AudioContext de p5 reanudado.");
+                attemptConnection();
+            }).catch(err => {
+                console.error("Video Player Manager: Error reanudando AudioContext de p5.", err);
+                if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+            });
+        } else if (p5AudioCtx && p5AudioCtx.state === 'running') {
+            console.log("Video Player Manager: AudioContext de p5 ya está 'running'.");
+            attemptConnection();
+        } else {
+             console.error("Video Player Manager: No se pudo obtener un AudioContext válido de p5 o está cerrado. Estado:", p5AudioCtx ? p5AudioCtx.state : "Contexto nulo");
+             if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
         }
     },
 
     _createAndConnectMediaElement: function(p5_instance) {
+        if (!this.player.currentSrc) { // Doble verificación
+            console.warn("VideoPlayerManager: _createAndConnectMediaElement llamado sin currentSrc en el player.");
+            return;
+        }
+        // Crear p5.MediaElement solo si no existe o el elemento subyacente es diferente
         if (!this.p5MediaElement || this.p5MediaElement.elt !== this.player) {
-            // Usa p5_instance.createMediaElement(this.player) o directamente new p5.MediaElement si p5 está global
-            // Pero para asegurar que usa el contexto de p5 de esta instancia:
+            console.log("Video Player Manager: Creando nueva instancia de p5.MediaElement.");
             try {
-                 this.p5MediaElement = p5_instance.createचीनMediaElement(this.player); // Método preferido si disponible en instancia 'p'
-                 console.log("Video Player Manager: p5.MediaElement creado via p.createMediaElement.");
+                // ***** MODIFIED SECTION START *****
+                // Use the p5.MediaElement constructor directly.
+                // Prefer global p5 if available, otherwise use p5_instance.constructor
+                if (typeof p5 !== 'undefined' && typeof p5.MediaElement === 'function') {
+                    this.p5MediaElement = new p5.MediaElement(this.player, p5_instance);
+                } else if (p5_instance && p5_instance.constructor && typeof p5_instance.constructor.MediaElement === 'function') {
+                    this.p5MediaElement = new p5_instance.constructor.MediaElement(this.player, p5_instance);
+                } else {
+                    console.error("Video Player Manager: p5.MediaElement constructor not found.");
+                    // This error will be caught by the try-catch block below, 
+                    // which then calls disconnectAudioSource ensuring the visualizer doesn't hang.
+                    throw new Error("p5.MediaElement constructor not found."); 
+                }
+                // ***** MODIFIED SECTION END *****
+                console.log("Video Player Manager: p5.MediaElement creado.");
+
             } catch (e) {
-                 console.warn("p.createMediaElement no existe, intentando new p5.MediaElement (puede usar contexto global). Error:", e);
-                 // Fallback si p.createMediaElement no está (versiones más viejas o si 'p' no es completo)
-                 if (typeof p5 !== 'undefined' && typeof p5.MediaElement === 'function') {
-                    this.p5MediaElement = new p5.MediaElement(this.player);
-                 } else {
-                    console.error("No se pudo crear p5.MediaElement.");
-                    if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
-                    return;
-                 }
+                console.error("Error al crear p5.MediaElement:", e);
+                if (this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+                return; // Important to return if creation failed
             }
         }
-        this.audioVisualizerInstance.connectAudioSource(this.p5MediaElement);
-        console.log("Video Player Manager: Conexión con p5.MediaElement solicitada.");
+        
+        // Ensure p5MediaElement was actually created before trying to connect it
+        if (this.audioVisualizerInstance && this.p5MediaElement) {
+            this.audioVisualizerInstance.connectAudioSource(this.p5MediaElement);
+        } else {
+            // This path could be reached if p5MediaElement creation failed and returned,
+            // or if this.audioVisualizerInstance is null for some reason.
+            console.warn("Video Player Manager: No se pudo conectar al visualizador (instancia o mediaElement faltante después del intento de creación).");
+            // Ensure we disconnect if we couldn't connect, especially if p5MediaElement is null from a failed creation
+            if (this.audioVisualizerInstance && !this.p5MediaElement) {
+                 this.audioVisualizerInstance.disconnectAudioSource();
+            }
+        }
     },
 
     loadSong: function(index, playImmediately = this.isGloballyPlaying) {
@@ -155,43 +188,42 @@ const videoPlayerManager = {
         if (this.audioVisualizerInstance) { 
             this.audioVisualizerInstance.disconnectAudioSource();
         }
+        this.p5MediaElement = null; // Resetear p5MediaElement al cargar nueva canción
 
         if (song.filePath && song.filePath.trim() !== "") {
             this.player.src = song.filePath;
-            this.player.load();
+            this.player.load(); // Make sure browser loads the new source
         } else {
             console.log(`Video Player Manager: Canción ${song.title} no tiene video. Limpiando player.`);
             if(this.player) {
-                this.player.removeAttribute('src');
-                this.player.load(); 
+                this.player.removeAttribute('src'); // Clear the src attribute
+                this.player.load(); // Important to call load() after changing src or removing it
                 this.player.style.display = 'none';
             }
         }
         this.updateTrackInfoUI(song);
         if(this.uiPlayerProgressBar) {
             this.uiPlayerProgressBar.value = 0;
-            this.uiPlayerProgressBar.max = 100; 
+            this.uiPlayerProgressBar.max = 100; // Default max until metadata loads
             this.uiPlayerProgressBar.disabled = !song.filePath; 
         }
         if(this.uiPlayerTotalTime && !song.filePath) this.uiPlayerTotalTime.textContent = "0:00";
+        if(this.uiPlayerCurrentTime && !song.filePath) this.uiPlayerCurrentTime.textContent = "0:00";
 
-        if (playImmediately && this.isGloballyPlaying && song.filePath) {
-             console.log("Video Player Manager: Carga solicitada con playImmediately para canción con video.");
-        } else if (playImmediately && this.isGloballyPlaying && !song.filePath) {
-            console.log("Video Player Manager: Carga solicitada con playImmediately para canción SIN video.");
-            this.isGloballyPlaying = false; 
-        } else {
-            if (song.filePath && this.player) this.player.pause();
-        }
-        this.updatePlayPauseButtonUI(this.isGloballyPlaying && playImmediately && !!song.filePath && this.player && !this.player.paused);
+
+        // The decision to play or not is handled by isGloballyPlaying.
+        // If playImmediately is true, we want it to play once metadata is loaded.
+        this.isGloballyPlaying = playImmediately && !!song.filePath;
+        this.updatePlayPauseButtonUI(this.isGloballyPlaying); // Update button based on intent
     },
 
     handleMetadata: function() {
         if (!this.player || !isFinite(this.player.duration) || !this.player.currentSrc) {
-            console.log("Video Player Manager: Metadatos cargados, pero sin duración o src válido.");
+            console.warn("Video Player Manager: Metadatos cargados, pero sin duración o src válido.");
             if (this.uiPlayerTotalTime) this.uiPlayerTotalTime.textContent = "0:00";
             if (this.uiPlayerProgressBar) {this.uiPlayerProgressBar.max = 0; this.uiPlayerProgressBar.value = 0; this.uiPlayerProgressBar.disabled = true;}
             if (this.player) this.player.style.display = 'none';
+            // Ensure visualizer is disconnected if metadata is bad
             if(this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
             return;
         }
@@ -201,23 +233,26 @@ const videoPlayerManager = {
             this.uiPlayerProgressBar.max = this.player.duration;
             this.uiPlayerProgressBar.disabled = false;
         }
-        if (this.player) this.player.style.display = 'block'; 
-        this.connectToP5AudioSystem();
+        if (this.player) this.player.style.display = 'block'; // Or as per your design
+        
+        this.connectToP5AudioSystem(); // Connect to visualizer now that we have metadata and src
+
         if (this.isGloballyPlaying && (this.player.paused || this.player.ended)) { 
             console.log("Video Player Manager: Reproduciendo después de loadedmetadata porque isGloballyPlaying es true.");
-            const playPromise = this.player.play();
-             if (playPromise !== undefined) {
-                playPromise.catch(e => {
-                    console.warn("Error en play() después de loadedmetadata:", e);
-                    this.isGloballyPlaying = false; 
-                    this.updatePlayPauseButtonUI(false);
-                });
-            }
+            this.player.play().catch(e => {
+                console.warn("Error en play() después de loadedmetadata:", e);
+                this.isGloballyPlaying = false; // Update state if play fails
+                this.updatePlayPauseButtonUI(false);
+            });
+        } else if (!this.isGloballyPlaying && !this.player.paused) {
+            // If it's not supposed to be playing, but it is (e.g. autoplay), pause it.
+            // This case might be rare due to explicit autoplay=false.
+            this.player.pause();
         }
     },
 
     handleTimeUpdate: function() {
-        if (!this.player || !isFinite(this.player.duration)) return;
+        if (!this.player || !isFinite(this.player.duration) || !this.player.currentSrc) return;
         if (this.uiPlayerCurrentTime) this.uiPlayerCurrentTime.textContent = this.formatTime(this.player.currentTime);
         if (this.uiPlayerProgressBar && !this.isUserDraggingProgressBar) {
             this.uiPlayerProgressBar.value = this.player.currentTime;
@@ -227,86 +262,109 @@ const videoPlayerManager = {
     handleSongEnded: function() {
         const endedSongTitle = this.playlist[this.currentSongIndex]?.title || "Canción desconocida";
         console.log(`Video Player Manager: Canción terminada - ${endedSongTitle}`);
+        // Decide if the next song should play based on whether the player was globally playing.
         this.playNextSong(this.isGloballyPlaying); 
     },
 
     togglePlayPause: function() {
-        if (!this.player || (!this.player.currentSrc && this.playlist.length > 0 && this.currentSongIndex === -1)) {
-             if(this.playlist.length > 0 && this.currentSongIndex === -1) {
-                console.warn("Video Player Manager: No hay canción cargada, cargando la primera.");
-                this.loadSong(0, true); 
-                this.isGloballyPlaying = true; 
-             } else {
-                console.warn("Video Player Manager: No hay src en el player para togglePlayPause y playlist vacía o índice inválido.");
-             }
+        if (!this.player) return;
+        
+        const currentSong = this.playlist[this.currentSongIndex];
+        if (!currentSong || !currentSong.filePath || !this.player.currentSrc) { // Check currentSrc too
+            console.warn("Video Player Manager: No hay canción con video cargada para reproducir/pausar.");
+            this.updatePlayPauseButtonUI(false); // Ensure button is in 'play' state
+            this.isGloballyPlaying = false; // Update global playing state
             return;
         }
         
-        // Obtener el contexto de p5 si existe
+        // Ensure p5 sound system is connected if not already
+        if (!this.p5MediaElement && this.player.currentSrc) {
+            console.log("Video Player Manager (togglePlayPause): p5MediaElement no existe, intentando conectar.");
+            this.connectToP5AudioSystem(); // This might be async due to AudioContext resume
+        }
+
+        // Handle AudioContext resume if suspended
         let p5AudioCtx = null;
         if (this.audioVisualizerInstance && this.audioVisualizerInstance.p5Instance && typeof this.audioVisualizerInstance.p5Instance.getAudioContext === 'function') {
             p5AudioCtx = this.audioVisualizerInstance.p5Instance.getAudioContext();
         }
 
+        const performToggle = () => {
+            if (!this.player.currentSrc) { // Re-check, as connectToP5AudioSystem might clear src on error
+                 console.warn("Video Player Manager (togglePlayPause): No currentSrc after attempting connection. Aborting toggle.");
+                 this.updatePlayPauseButtonUI(false);
+                 this.isGloballyPlaying = false;
+                 return;
+            }
+            this._performTogglePlayPauseInternal();
+        };
+
         if (p5AudioCtx && p5AudioCtx.state === 'suspended') {
             p5AudioCtx.resume().then(() => {
                 console.log("AudioContext reanudado por togglePlayPause.");
-                this._performTogglePlayPauseInternal();
+                performToggle();
             }).catch(e => {
                 console.error("Error reanudando AudioContext en togglePlayPause", e);
-                this._performTogglePlayPauseInternal(); 
+                performToggle(); // Attempt to play/pause even if resume fails
             });
         } else {
-            this._performTogglePlayPauseInternal();
+            performToggle();
         }
     },
 
     _performTogglePlayPauseInternal: function() {
-        const currentSong = this.playlist[this.currentSongIndex];
-        if (!this.player.currentSrc && currentSong && !currentSong.filePath) {
-            console.log("Video Player Manager: Canción actual no tiene video, no se puede reproducir/pausar video.");
-            // Para canciones sin video, solo cambiamos el estado visual del botón play/pause
-            this.isGloballyPlaying = !this.isGloballyPlaying;
-            this.updatePlayPauseButtonUI(this.isGloballyPlaying); 
-            if(this.audioVisualizerInstance) this.audioVisualizerInstance.disconnectAudioSource();
+        if (!this.player.currentSrc) { // Añadir esta guarda por si acaso
+            console.warn("Video Player Manager (_performTogglePlayPauseInternal): No currentSrc. Abortando.");
+            this.isGloballyPlaying = false;
+            this.updatePlayPauseButtonUI(false);
             return;
         }
 
         if (this.player.paused || this.player.ended) {
             console.log("Video Player Manager: Intentando reproducir video.");
-            const playPromise = this.player.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => { 
-                            this.isGloballyPlaying = true; 
-                            console.log("Video Player Manager: Reproducción iniciada.");
-                           })
-                           .catch(e => {
-                               console.error("Error al intentar reproducir video:", e);
-                               this.isGloballyPlaying = false; 
-                               this.updatePlayPauseButtonUI(false);
-                           });
-            } else { 
-                 this.isGloballyPlaying = true;
-                 this.updatePlayPauseButtonUI(true); 
+
+            // Punto CRÍTICO para el primer play:
+            // Si p5MediaElement no existe o no está asociado con el player actual
+            // (podría ser de una canción anterior o no haberse creado bien por AudioContext suspendido),
+            // intentar conectar/reconectar AHORA que el AudioContext debería estar activo
+            // gracias a la interacción del usuario en togglePlayPause.
+            if ((!this.p5MediaElement || this.p5MediaElement.elt !== this.player) && this.audioVisualizerInstance) {
+                console.log("Video Player Manager (_performTogglePlayPauseInternal): p5MediaElement no existe o es obsoleto. (Re)conectando a P5 Audio System.");
+                this.connectToP5AudioSystem(); // Esto intentará crear/conectar p5MediaElement
+                                              // y luego llamará a audioVisualizer.connectAudioSource()
             }
+
+            this.player.play()
+                .then(() => {
+                    this.isGloballyPlaying = true;
+                    console.log("Video Player Manager: Reproducción iniciada.");
+                    // La UI del botón se actualiza por el evento 'play' del video element.
+                    // Si la conexión a P5 falló arriba, el visualizador no funcionará, pero el audio HTML5 sí.
+                })
+                .catch(e => {
+                    console.error("Error al intentar reproducir video:", e);
+                    this.isGloballyPlaying = false;
+                    this.updatePlayPauseButtonUI(false); // Asegurar que el botón refleje el fallo
+                });
         } else {
             console.log("Video Player Manager: Pausando video.");
             this.player.pause();
             this.isGloballyPlaying = false;
+            // La UI del botón se actualiza por el evento 'pause' del video element.
         }
     },
     
     playNextSong: function(playImmediately = true) {
         console.log("Video Player Manager: playNextSong llamado.");
+        if (this.playlist.length === 0) return;
         let nextIndex = (this.currentSongIndex + 1) % this.playlist.length;
-        this.isGloballyPlaying = playImmediately; 
         this.loadSong(nextIndex, playImmediately);
     },
 
     playPrevSong: function(playImmediately = true) {
         console.log("Video Player Manager: playPrevSong llamado.");
+        if (this.playlist.length === 0) return;
         let prevIndex = (this.currentSongIndex - 1 + this.playlist.length) % this.playlist.length;
-        this.isGloballyPlaying = playImmediately;
         this.loadSong(prevIndex, playImmediately);
     },
 
@@ -322,10 +380,16 @@ const videoPlayerManager = {
         const newVolume = Math.max(0, Math.min(1, level));
         this.player.volume = newVolume;
         if (newVolume > 0 && this.player.muted) {
-             this.player.muted = false; 
+             this.player.muted = false; // Unmute if volume is set to a positive value
         }
-        this.lastVolumeBeforeMute = newVolume > 0 ? newVolume : this.lastVolumeBeforeMute;
-        console.log(`Video Player Manager: Volumen ajustado a ${this.player.volume}`);
+        // Update lastVolumeBeforeMute only if not muted and volume is positive
+        if (!this.player.muted && newVolume > 0) {
+            this.lastVolumeBeforeMute = newVolume;
+        } else if (newVolume === 0 && !this.player.muted) {
+            // If setting volume to 0 explicitly (not muting), treat it as such
+            // lastVolumeBeforeMute remains the previous non-zero volume
+        }
+        // The 'volumechange' event will trigger UI update
     },
     
     toggleMute: function() {
@@ -334,24 +398,37 @@ const videoPlayerManager = {
         console.log(`Video Player Manager: Mute toogleado a ${this.player.muted}`);
         
         const volumeSlider = document.getElementById('volume-slider');
-        if (!this.player.muted && this.player.volume === 0 && this.lastVolumeBeforeMute > 0) {
-            this.player.volume = this.lastVolumeBeforeMute;
+        if (this.player.muted) {
+            // If muted, store current volume if it's > 0
+            if (this.player.volume > 0) {
+                this.lastVolumeBeforeMute = this.player.volume;
+            }
+            // Optionally set slider to 0 or disable it, or reflect player.volume which might be 0
+            // if (volumeSlider) volumeSlider.value = 0; 
+        } else {
+            // Unmuting: restore last known volume if current volume is 0
+            if (this.player.volume === 0 && this.lastVolumeBeforeMute > 0) {
+                this.player.volume = this.lastVolumeBeforeMute;
+            }
+            // Update slider to current player volume
+            if (volumeSlider) volumeSlider.value = this.player.volume;
         }
-        if (volumeSlider) { 
-             if (!this.player.muted) volumeSlider.value = this.player.volume;
-        }
+        // The 'volumechange' event handles icon UI updates.
     },
     
     handleVolumeChange: function() { 
         if (!this.player) return;
         console.log(`Video Player Manager: Evento volumechange. Volumen: ${this.player.volume}, Muted: ${this.player.muted}`);
         this.updateVolumeIconUI(this.player.volume, this.player.muted);
-        
+        // Update slider if change was not from slider itself
         const volumeSlider = document.getElementById('volume-slider');
-        if (volumeSlider && !this.player.muted && parseFloat(volumeSlider.value).toFixed(2) !== this.player.volume.toFixed(2)) {
-             // Solo actualizar si el valor es realmente diferente y no estamos muteados
-             // Esto ayuda a prevenir bucles si el evento se dispara por nuestro propio seteo del slider
-             // volumeSlider.value = this.player.volume; // Comentado para evitar posibles bucles, el usuario maneja el slider
+        if (volumeSlider && parseFloat(volumeSlider.value) !== this.player.volume && !this.player.muted) {
+            volumeSlider.value = this.player.volume;
+        }
+        // If muted and volume is 0, keep slider reflecting that, or lastVolumeBeforeMute if unmuted
+        if (this.player.muted && volumeSlider) {
+           // Slider could reflect 0 or be disabled. Current behavior is it reflects actual volume.
+           // If you want slider to show pre-mute value, that's different logic.
         }
     },
 
@@ -360,7 +437,7 @@ const videoPlayerManager = {
         this.uiMusicVolumeIcon.classList.remove('fa-volume-up','fa-volume-down','fa-volume-mute','fa-volume-off');
         if (muted || volume === 0) {
             this.uiMusicVolumeIcon.classList.add('fa-volume-off');      
-        } else if (volume < 0.01) { 
+        } else if (volume < 0.01) { // Extremely low volume, practically mute
             this.uiMusicVolumeIcon.classList.add('fa-volume-mute'); 
         } else if (volume < 0.5) {
             this.uiMusicVolumeIcon.classList.add('fa-volume-down');  
@@ -370,13 +447,13 @@ const videoPlayerManager = {
     },
 
     updateTrackInfoUI: function(song) {
-        if (song) {
+        if (song && song.filePath) { // Ensure there's a file path to consider it a valid song for UI
             if(this.uiPlayerSongTitle) this.uiPlayerSongTitle.textContent = song.title;
             if(this.uiPlayerSongArtist) this.uiPlayerSongArtist.textContent = song.artist;
             if(this.uiPlayerAlbumArtImg) this.uiPlayerAlbumArtImg.src = song.albumArtPath || 'assets/SONGS_COVERS/default_art.png';
-        } else {
+        } else { // Handles null song or song without filePath
             if(this.uiPlayerSongTitle) this.uiPlayerSongTitle.textContent = "No Song Loaded";
-            if(this.uiPlayerSongArtist) this.uiPlayerSongArtist.textContent = "";
+            if(this.uiPlayerSongArtist) this.uiPlayerSongArtist.textContent = "---";
             if(this.uiPlayerAlbumArtImg) this.uiPlayerAlbumArtImg.src = 'assets/SONGS_COVERS/default_art.png';
             if(this.uiPlayerCurrentTime) this.uiPlayerCurrentTime.textContent = "0:00";
             if(this.uiPlayerTotalTime) this.uiPlayerTotalTime.textContent = "0:00";

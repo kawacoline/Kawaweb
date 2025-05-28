@@ -28,44 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
           albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg" }
     ];
 
-    // 1. Crear la instancia de p5 para el visualizador.
-    new p5(audioVisualizer.sketch); 
+new p5(audioVisualizer.sketch); 
 
-    // 2. Esperar a que el setup de p5 Y el sistema de sonido de p5 estén listos
     function checkP5SystemReadyAndInitPlayer() {
         let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance;
-        let p5SoundReadyAndContextAvailable = false;
-        let audioCtxFromP5 = null;
+        // Ya no necesitamos verificar p5SoundReady aquí, videoPlayerManager lo hará internamente
 
         if (p5CoreAndSketchSetupDone) {
-            if (typeof audioVisualizer.p5Instance.getAudioContext === 'function') {
-                try {
-                    audioCtxFromP5 = audioVisualizer.p5Instance.getAudioContext();
-                    if (audioCtxFromP5 && (audioCtxFromP5.state === 'running' || audioCtxFromP5.state === 'suspended')) {
-                        p5SoundReadyAndContextAvailable = true;
-                        console.log("Script.js: p5.sound y AudioContext (desde instancia p5) están listos. Estado:", audioCtxFromP5.state);
-                    } else {
-                        console.warn("Script.js: p5Instance.getAudioContext() existe, pero el AudioContext no es válido o no está listo. Estado:", audioCtxFromP5 ? audioCtxFromP5.state : "AudioContext nulo");
-                        if (audioCtxFromP5 && audioCtxFromP5.state === 'closed') {
-                            console.error("Script.js: El AudioContext de p5 está CERRADO.");
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Script.js: Error al llamar a p5Instance.getAudioContext():", e);
-                }
-            } else {
-                console.log("Script.js: p5.setup completado, pero p5Instance.getAudioContext aún no es una función.");
-            }
-        } else {
-            console.log("Script.js: Esperando a que el setup del sketch de p5 (audioVisualizer.p5SetupDone y p5Instance) esté completo...");
-        }
-
-        if (p5CoreAndSketchSetupDone && p5SoundReadyAndContextAvailable) {
-            console.log("Script.js: p5 (core y sound) está completamente listo. Inicializando Video Player Manager.");
+            console.log("Script.js: Sketch de p5 (audioVisualizer) está listo. Inicializando Video Player Manager.");
             videoPlayerManager.init({
                 playlist: playlistData,
-                audioVisualizer: audioVisualizer,
-                audioContext: audioCtxFromP5 
+                audioVisualizer: audioVisualizer
+                // No es necesario pasar audioContext aquí, el manager lo tomará de p5Instance
             });
 
             if (musicPlayerBarDOM && videoPlayerManager.playlist.length > 0 && videoPlayerManager.player) {
@@ -76,8 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  console.warn("Script.js: No se activa la barra del reproductor.");
             }
         } else {
-            console.log(`Script.js: Waiting for p5 core/sketch (${p5CoreAndSketchSetupDone}) and p5.sound/context (${p5SoundReadyAndContextAvailable}) to be ready...`);
-            setTimeout(checkP5SystemReadyAndInitPlayer, 250); 
+            console.log(`Script.js: Waiting for p5 sketch (audioVisualizer.p5SetupDone && p5Instance) to be ready...`);
+            setTimeout(checkP5SystemReadyAndInitPlayer, 100); 
         }
     }
     checkP5SystemReadyAndInitPlayer();
@@ -237,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         minimized.sort((a,b) => (a.state.minimizedOffset || baseMinimizedInitialOffset) - (b.state.minimizedOffset || baseMinimizedInitialOffset));
         minimized.forEach(item => { item.modal.style.setProperty('--minimized-left', `${currentOffset}px`); item.state.minimizedOffset = currentOffset; currentOffset += minimizedWindowWidth + minimizedWindowSpacing; });
     }
-    function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
+     function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
 
     if (playerPlayPauseBtn) { playerPlayPauseBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.togglePlayPause(); }); }
     if (playerNextBtn) { playerNextBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.playNextSong(); }); }
@@ -246,9 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playerProgressBar) {
         playerProgressBar.addEventListener('input', (e) => {
             videoPlayerManager.isUserDraggingProgressBar = true;
-            if (videoPlayerManager.uiPlayerCurrentTime && videoPlayerManager.player) { // Check player exists
-                 // Formatear el tiempo basado en el valor del slider, no en player.duration si este aún no está listo
-                const duration = parseFloat(playerProgressBar.max) || 0; // Usar max de la barra o 0
+            if (videoPlayerManager.uiPlayerCurrentTime && videoPlayerManager.player) {
                 const desiredTime = parseFloat(e.target.value);
                 videoPlayerManager.uiPlayerCurrentTime.textContent = videoPlayerManager.formatTime(desiredTime);
             }
@@ -261,23 +233,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('mouseup', () => {
             if (videoPlayerManager.isUserDraggingProgressBar) {
                 videoPlayerManager.isUserDraggingProgressBar = false;
-                // El 'change' event del slider debería haber manejado el seek final
             }
         });
     }
 
     if (volumeSlider) {
-        // La inicialización del volumen del player ya se hace en videoPlayerManager.init
-        // Aquí solo aseguramos que el slider refleje ese estado inicial si es necesario
-        // o que el updateVolumeIconDisplay se llame
         if (videoPlayerManager.player) {
             updateVolumeIconDisplay(videoPlayerManager.player.volume, videoPlayerManager.player.muted);
         }
-
         volumeSlider.addEventListener('input', (e) => {
             const vol = parseFloat(e.target.value);
             videoPlayerManager.setVolume(vol);
-            // updateVolumeIconDisplay se llamará por el evento 'volumechange' del video player
         });
         volumeSlider.addEventListener('change', playClickSound);
     }
@@ -307,11 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleGlobalUserInteractionForAudioContext() {
         if (!globalUserInteractionHasOccurred) {
             let ctxToResume = null;
-            // Priorizar el contexto de p5 si ya está en el videoPlayerManager
-            if (videoPlayerManager.audioContextForP5 && videoPlayerManager.audioContextForP5.state === 'suspended') {
-                ctxToResume = videoPlayerManager.audioContextForP5;
-            } else if (audioVisualizer.p5Instance && typeof audioVisualizer.p5Instance.getAudioContext === 'function') {
-                // Si no, intentar obtenerlo de la instancia p5 del visualizador
+            if (audioVisualizer.p5Instance && typeof audioVisualizer.p5Instance.getAudioContext === 'function') {
                 let p5Ctx = audioVisualizer.p5Instance.getAudioContext();
                 if (p5Ctx && p5Ctx.state === 'suspended') {
                     ctxToResume = p5Ctx;
@@ -321,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ctxToResume) {
                 ctxToResume.resume().then(() => {
                     console.log("AudioContext resumed by global interaction. State:", ctxToResume.state);
-                    // Si el reproductor estaba intentando sonar y falló por esto, podría reintentar
                     if (videoPlayerManager.isGloballyPlaying && videoPlayerManager.player && videoPlayerManager.player.paused) {
                         console.log("Retrying play after AudioContext resume.");
                         videoPlayerManager.player.play().catch(e => console.warn("Error retrying play:", e));
@@ -340,10 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (toggleMainContentBtn && contentWrapper && toggleIcon) {
         toggleMainContentBtn.addEventListener('click', () => {
-            playClickSound(); // Reuse click sound
+            playClickSound(); 
             contentWrapper.classList.toggle('hidden-by-toggle');
-
-            // Toggle eye icon
             if (contentWrapper.classList.contains('hidden-by-toggle')) {
                 toggleIcon.classList.remove('fa-eye');
                 toggleIcon.classList.add('fa-eye-slash');
@@ -357,5 +316,4 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn("Botón para ocultar contenido o contentWrapper no encontrado.");
     }
-
-}); // Fin de DOMContentLoaded
+});
