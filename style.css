@@ -521,3 +521,36 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #player-volume-controls #volume-slider:hover::-moz-range-thumb {
   background: var(--theme-accent-primary);
 }
+
+#toggle-main-content-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--theme-header-bg); /* O un color que prefieras */
+    color: var(--theme-accent-primary);
+    border: 1px solid var(--theme-border-strong);
+    border-radius: 50%;
+    font-size: 1.2em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 990; /* Debajo de los modales (1000+) pero encima de la mayoría del contenido */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: background-color var(--transition-speed), transform 0.2s;
+}
+
+#toggle-main-content-btn:hover {
+    background-color: var(--theme-main-container-bg);
+    transform: scale(1.1);
+}
+
+/* Clase para ocultar el .content-wrapper */
+.content-wrapper.hidden-by-toggle {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8) translateY(20px); /* Efecto de desaparición opcional */
+    transition: opacity 0.3s ease-out, visibility 0s linear 0.3s, transform 0.3s ease-out;
+}

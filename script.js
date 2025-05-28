@@ -334,4 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', handleGlobalUserInteractionForAudioContext, { once: true, capture: true });
     document.body.addEventListener('keydown', handleGlobalUserInteractionForAudioContext, { once: true, capture: true });
 
+    const contentWrapper = document.querySelector('.content-wrapper');
+    const toggleMainContentBtn = document.getElementById('toggle-main-content-btn');
+    const toggleIcon = toggleMainContentBtn ? toggleMainContentBtn.querySelector('i') : null;
+
+    if (toggleMainContentBtn && contentWrapper && toggleIcon) {
+        toggleMainContentBtn.addEventListener('click', () => {
+            playClickSound(); // Reuse click sound
+            contentWrapper.classList.toggle('hidden-by-toggle');
+
+            // Toggle eye icon
+            if (contentWrapper.classList.contains('hidden-by-toggle')) {
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+                toggleMainContentBtn.title = "Mostrar Contenido";
+            } else {
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+                toggleMainContentBtn.title = "Ocultar Contenido";
+            }
+        });
+    } else {
+        console.warn("Botón para ocultar contenido o contentWrapper no encontrado.");
+    }
+
 }); // Fin de DOMContentLoaded
