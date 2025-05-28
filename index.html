@@ -14,10 +14,9 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/addons/p5.sound.min.js"></script>
 </head>
 <body>
-    <!-- NEW Music Player Bar -->
+    <!-- Player Bar (controlada por videoPlayerManager.js y script.js) -->
     <div id="music-player-bar">
         <div id="player-album-art-container">
-            <!-- MODIFIED PATH for default_art.png -->
             <img id="player-album-art-img" src="assets/SONGS_COVERS/default_art.png" alt="Album Art">
         </div>
         <div id="player-track-info">
@@ -31,7 +30,7 @@
         </div>
         <div id="player-progress-container">
             <span id="player-current-time">0:00</span>
-            <input type="range" id="player-progress-bar" value="0" min="0" max="100" step="0.1">
+            <input type="range" id="player-progress-bar" value="0" min="0" step="0.1"> <!-- max se seteará dinámicamente -->
             <span id="player-total-time">0:00</span>
         </div>
         <div id="player-volume-controls">
@@ -40,12 +39,12 @@
         </div>
     </div>
 
-    <!-- ADDED Container for Background Video -->
+    <!-- Video Player (fuente de audio y video) -->
     <div id="background-video-container">
-        <video id="background-video-player" preload="metadata" muted loop></video>
+        <video id="background-video-player" preload="metadata"></video> <!-- muted y loop se manejan en JS -->
     </div>
 
-    <!-- Container for p5.js sketch -->
+    <!-- p5.js Visualizer Canvas -->
     <div id="p5-visualizer-container"></div>
 
     <div class="content-wrapper">
@@ -91,7 +90,7 @@
         </footer>
     </div>
 
-    <!-- Ventanas Emergentes (Modals) -->
+    <!-- Modals (sin cambios) -->
     <div id="about-modal" class="modal">
         <div class="modal-header"><span class="modal-title">About Me</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
         <div class="modal-content">
@@ -150,6 +149,8 @@ You can find my commissions info, likes & art gallery in this website</p>
 
     <audio id="clickSound" src="assets/click.mp3" preload="auto"></audio>
     
+    <script src="videoPlayerManager.js"></script>
+    <script src="audioVisualizer.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

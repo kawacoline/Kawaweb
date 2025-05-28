@@ -30,27 +30,23 @@ body {
     user-select: none;         
 }
 
-/* ADDED for Background Video Container */
 #background-video-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* Encima del fondo por defecto del body, pero detrás de p5 y contenido */
-    pointer-events: none; /* Prevent interaction with video layer */
-    overflow: hidden; /* Ensure video doesn't cause scrollbars */
-    /* background-color: rgba(255, 0, 0, 0.2); */ /* Puedes quitar/comentar esto por ahora */
+    z-index: 1; 
+    pointer-events: none; 
+    overflow: hidden; 
 }
 
 #background-video-container video {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the entire area */
-    display: none; /* Initially hidden, controlled by JS */
+    object-fit: cover; 
+    display: none; 
 }
-/* END ADDED for Background Video */
-
 
 #p5-visualizer-container {
     position: fixed;
@@ -58,21 +54,19 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2; /* Encima del video, pero detrás del contenido principal */
+    z-index: 2; 
     pointer-events: none; 
-    /* background-color: rgba(0, 255, 0, 0.2); */ /* VERDE SEMITRANSPARENTE PARA DEBUG (opcional) */
 }
 #p5-visualizer-container canvas { 
     display: block; 
 }
 
-/* Estilos para el antiguo control de música, se dejan por si se usan en algún sitio, pero el nuevo es #music-player-bar */
 #music-control {
     position: fixed; top: 20px; left: 20px; font-size: 1.4em;
     color: var(--theme-text-on-dark);
     background-color: rgba(0,0,0,0.5); 
     padding: 7px 9px; border-radius: 50%;
-    z-index: 1010;
+    z-index: 1010; /* Encima de todo */
     transition: color var(--transition-speed), background-color var(--transition-speed), transform 0.2s;
     border: 1px solid var(--theme-border-strong);
     cursor: pointer; 
@@ -90,10 +84,10 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
 .content-wrapper {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
-    position: relative; z-index: 10; 
+    position: relative; z-index: 10; /* Encima del visualizador y video */
     transform: scale(1.4); 
     transform-origin: center center;
-    padding-top: 85px; /* player bar height (70px) + some margin (15px) */
+    padding-top: 85px; 
 }
 
 .main-container {
@@ -102,7 +96,7 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     box-shadow: 0 8px 25px rgba(0,0,0,0.35); 
     text-align: center; max-width: 580px; width: 100%;
     border: 1px solid var(--theme-border-strong); margin-bottom: 30px;
-    position: relative; z-index: 1;
+    position: relative; z-index: 1; /* Relativo a content-wrapper */
 }
 
 .profile-picture-placeholder {
@@ -148,7 +142,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     background-color: var(--theme-modal-surface); color: var(--theme-text-on-dark);
     border: 1px solid var(--theme-border-strong); border-radius: 8px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
-    z-index: 1000;
+    z-index: 1000; /* Encima de la barra del reproductor */
     min-width: 300px; width: clamp(320px, 60%, 750px); max-height: 85vh; 
     transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
     display: flex; flex-direction: column; overflow: hidden;
@@ -325,7 +319,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     justify-content: space-between; 
     padding: 0 15px; 
     box-sizing: border-box;
-    z-index: 950; 
+    z-index: 950; /* Encima del visualizador y video, debajo de modales */
     border-bottom: 1px solid var(--theme-border-strong);
     visibility: hidden;
     opacity: 0;

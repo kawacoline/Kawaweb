@@ -1,235 +1,85 @@
+// script.js
+
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM Elements ---
     const iconItems = document.querySelectorAll('.icon-item');
     const modals = document.querySelectorAll('.modal');
     const clickSound = document.getElementById('clickSound');
-    const musicPlayerBar = document.getElementById('music-player-bar');
-
-    const playerAlbumArtImg = document.getElementById('player-album-art-img');
-    const playerSongTitle = document.getElementById('player-song-title');
-    const playerSongArtist = document.getElementById('player-song-artist');
+    const musicPlayerBarDOM = document.getElementById('music-player-bar'); // Renombrado para evitar confusión con variable global
+    
     const playerPrevBtn = document.getElementById('player-prev-btn');
     const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
-    const playerPlayPauseIcon = playerPlayPauseBtn.querySelector('i');
     const playerNextBtn = document.getElementById('player-next-btn');
-    const playerCurrentTime = document.getElementById('player-current-time');
-    const playerTotalTime = document.getElementById('player-total-time');
-    const playerProgressBar = document.getElementById('player-progress-bar');
-    
-    const musicVolumeIcon = document.getElementById('music-volume-icon');
+    const playerProgressBar = document.getElementById('player-progress-bar'); 
     const volumeSlider = document.getElementById('volume-slider');
+    const musicVolumeIcon = document.getElementById('music-volume-icon');
 
-    // ADDED: Background Video Player Element
-    const backgroundVideoPlayerElement = document.getElementById('background-video-player');
+    const playlistData = [
+        { title: "Aegleseeker", artist: "Silentroom vs Frums", 
+          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748395211/d3snqsjythwmwnszdpe0.mp4", 
+          albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg" },
+        { title: "World execute (me)", artist: "Mili", 
+          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748323206/ybejaiedxaryhcbko9ms.webm", 
+          albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg" }
+    ];
 
-    // --- State Variables ---
+    // 1. Crear la instancia de p5 para el visualizador.
+    new p5(audioVisualizer.sketch); 
+
+    // 2. Esperar a que el setup de p5 Y el sistema de sonido de p5 estén listos
+    function checkP5SystemReadyAndInitPlayer() {
+        let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance;
+        let p5SoundReadyAndContextAvailable = false;
+        let audioCtxFromP5 = null;
+
+        if (p5CoreAndSketchSetupDone) {
+            if (typeof audioVisualizer.p5Instance.getAudioContext === 'function') {
+                try {
+                    audioCtxFromP5 = audioVisualizer.p5Instance.getAudioContext();
+                    if (audioCtxFromP5 && (audioCtxFromP5.state === 'running' || audioCtxFromP5.state === 'suspended')) {
+                        p5SoundReadyAndContextAvailable = true;
+                        console.log("Script.js: p5.sound y AudioContext (desde instancia p5) están listos. Estado:", audioCtxFromP5.state);
+                    } else {
+                        console.warn("Script.js: p5Instance.getAudioContext() existe, pero el AudioContext no es válido o no está listo. Estado:", audioCtxFromP5 ? audioCtxFromP5.state : "AudioContext nulo");
+                        if (audioCtxFromP5 && audioCtxFromP5.state === 'closed') {
+                            console.error("Script.js: El AudioContext de p5 está CERRADO.");
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Script.js: Error al llamar a p5Instance.getAudioContext():", e);
+                }
+            } else {
+                console.log("Script.js: p5.setup completado, pero p5Instance.getAudioContext aún no es una función.");
+            }
+        } else {
+            console.log("Script.js: Esperando a que el setup del sketch de p5 (audioVisualizer.p5SetupDone y p5Instance) esté completo...");
+        }
+
+        if (p5CoreAndSketchSetupDone && p5SoundReadyAndContextAvailable) {
+            console.log("Script.js: p5 (core y sound) está completamente listo. Inicializando Video Player Manager.");
+            videoPlayerManager.init({
+                playlist: playlistData,
+                audioVisualizer: audioVisualizer,
+                audioContext: audioCtxFromP5 
+            });
+
+            if (musicPlayerBarDOM && videoPlayerManager.playlist.length > 0 && videoPlayerManager.player) {
+                musicPlayerBarDOM.classList.add('ready');
+                console.log("Script.js: Barra de reproductor activada.");
+            } else if (musicPlayerBarDOM) {
+                 musicPlayerBarDOM.classList.remove('ready');
+                 console.warn("Script.js: No se activa la barra del reproductor.");
+            }
+        } else {
+            console.log(`Script.js: Waiting for p5 core/sketch (${p5CoreAndSketchSetupDone}) and p5.sound/context (${p5SoundReadyAndContextAvailable}) to be ready...`);
+            setTimeout(checkP5SystemReadyAndInitPlayer, 250); 
+        }
+    }
+    checkP5SystemReadyAndInitPlayer();
+
+    // --- Lógica de UI (Modales, etc.) ---
     let modalBaseZIndex = 1000;
     const modalStates = new Map();
-    let p5SketchInstance;
-    let lastVolumeBeforeIconClickMute = 0.7;
-
-    // --- NEW: Background Video Manager ---
-    const backgroundVideoManager = {
-        player: backgroundVideoPlayerElement,
-        currentVideoPath: null,
-        isReady: false,
-
-        init: function() {
-            if (!this.player) {
-                console.error("Background video player element not found!");
-                return;
-            }
-            this.player.muted = true;
-            this.player.loop = true;
-            this.player.style.display = 'none';
-            this.isReady = true;
-            console.log("Background Video Manager initialized.");
-
-            // --- AÑADIR ESCUCHADORES DE EVENTOS DE DEBUG ---
-            this.player.addEventListener('error', (e) => {
-                console.error('Video Element Error Event:', e);
-                if (this.player.error) {
-                    console.error('Video Error Code:', this.player.error.code);
-                    console.error('Video Error Message:', this.player.error.message);
-                }
-            });
-            this.player.addEventListener('stalled', () => console.warn('Video Waiting Event: Playback stopped due to temporary lack of data.'));
-            this.player.addEventListener('waiting', () => console.warn('Video Waiting Event: Playback stopped due to temporary lack of data.'));
-            this.player.addEventListener('loadedmetadata', () => {
-                console.log(`Video Event: loadedmetadata. Duration: ${this.player.duration}`);
-            });
-            this.player.addEventListener('loadeddata', () => {
-                console.log('Video Event: loadeddata. Video has loaded the current frame.');
-            });
-            this.player.addEventListener('canplay', () => {
-                console.log('Video Event: canplay. Browser can start playing.');
-            });
-            this.player.addEventListener('canplaythrough', () => {
-                console.log('Video Event: canplaythrough. Browser estimates it can play through without stopping for buffering.');
-            });
-            this.player.addEventListener('playing', () => {
-                console.log('Video Event: playing. Playback has begun.');
-            });
-            this.player.addEventListener('pause', () => {
-                console.log('Video Event: pause. Playback has been paused.');
-            });
-            // --- FIN DE ESCUCHADORES DE EVENTOS DE DEBUG ---
-        },
-
-        loadVideo: function(songData) {
-            if (!this.isReady || !this.player) return;
-            const videoPath = songData ? songData.videoPath : null;
-
-            console.log(`Video Manager: Attempting to load video for song: ${songData ? songData.title : 'None'}`);
-
-            if (videoPath) {
-                console.log(`Video Manager: Video path determined: ${videoPath}`);
-                if (this.currentVideoPath !== videoPath || this.player.style.display === 'none' || !this.player.src.includes(videoPath)) {
-                    console.log(`Video Manager: Setting new video source to ${videoPath}`);
-                    this.player.src = videoPath;
-                    this.player.load(); // Crucial for new src
-                    this.currentVideoPath = videoPath;
-                } else {
-                    console.log(`Video Manager: Video source ${videoPath} is already set.`);
-                }
-                this.player.style.display = 'block'; // Make sure it's visible
-                console.log(`Video Manager: Video display set to 'block'. Player src: ${this.player.src}`);
-
-                // --- NUEVO DEBUG ---
-                console.log('Video Element Computed Style - display:', window.getComputedStyle(this.player).display);
-                console.log('Video Element Computed Style - width:', window.getComputedStyle(this.player).width);
-                console.log('Video Element Computed Style - height:', window.getComputedStyle(this.player).height);
-                console.log('Video Element Computed Style - opacity:', window.getComputedStyle(this.player).opacity);
-                console.log('Video Element parentNode display:', window.getComputedStyle(this.player.parentNode).display);
-                // --- FIN NUEVO DEBUG ---
-
-            } else {
-                console.log("Video Manager: No video path for this song. Hiding video.");
-                this.hideVideo();
-            }
-        },
-
-        playVideo: function(audioCurrentTime) {
-            if (!this.isReady || !this.player || !this.player.src || this.player.style.display === 'none') {
-                console.log("Video Manager: Play preconditions not met.", 
-                    `isReady: ${this.isReady}`, 
-                    `player: ${!!this.player}`, 
-                    `player.src: ${this.player ? this.player.src : 'N/A'}`,
-                    `player.style.display: ${this.player ? this.player.style.display : 'N/A'}`
-                );
-                return;
-            }
-            console.log(`Video Manager: Attempting to play video. Current time: ${this.player.currentTime}, Target audio time: ${audioCurrentTime}`);
-
-            const doPlay = () => {
-                if (typeof audioCurrentTime === 'number' && this.player.duration && Math.abs(this.player.currentTime - audioCurrentTime) > 0.25) {
-                    const targetVideoTime = Math.min(audioCurrentTime, this.player.duration);
-                    console.log(`Video Manager: Syncing video time from ${this.player.currentTime.toFixed(2)} to ${targetVideoTime.toFixed(2)}`);
-                    this.player.currentTime = targetVideoTime;
-                }
-                console.log("Video Manager: Calling player.play()");
-                const playPromise = this.player.play();
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(_ => {
-                            console.log(`Video Manager: Video playback started successfully or already playing at ${this.player.currentTime.toFixed(2)}s.`);
-                        })
-                        .catch(error => {
-                            console.error("Video Manager: Error during player.play() promise:", error);
-                            if (error.name === 'NotAllowedError') {
-                                console.warn("Video Autoplay was prevented. This usually requires user interaction or specific browser settings.");
-                            }
-                        });
-                } else {
-                    console.warn("Video Manager: player.play() did not return a promise (older browser or issue).");
-                }
-            };
-
-            console.log(`Video Manager: Player readyState: ${this.player.readyState}`);
-            if (this.player.readyState >= 2) { // HAVE_CURRENT_DATA or more
-                console.log("Video Manager: Player has current data or more. Calling doPlay().");
-                doPlay();
-            } else {
-                console.log("Video Manager: Player not ready enough. Setting oncanplay listener.");
-                this.player.oncanplay = null; 
-                this.player.oncanplay = () => {
-                    console.log("Video Manager: oncanplay triggered. Calling doPlay().");
-                    doPlay();
-                    this.player.oncanplay = null; // Limpia el listener después de usarlo
-                };
-                this.player.load(); // Asegurarse de que la carga está en progreso
-            }
-        },
-
-        pauseVideo: function() {
-            if (!this.isReady || !this.player || !this.player.src) return;
-            this.player.pause();
-            console.log("Video Manager: Paused video.");
-        },
-
-        seekVideo: function(time) {
-            if (!this.isReady || !this.player || !this.player.src || this.player.style.display === 'none') return;
-            console.log(`Video Manager: Attempting to seek video to ${time}. Current readyState: ${this.player.readyState}`);
-
-            const doSeek = () => {
-                const targetTime = this.player.duration ? Math.min(time, this.player.duration) : time;
-                console.log(`Video Manager: Seeking video from ${this.player.currentTime.toFixed(2)} to ${targetTime.toFixed(2)}`);
-                this.player.currentTime = targetTime;
-            };
-
-            if (this.player.readyState >= 2) { // HAVE_CURRENT_DATA or more
-                doSeek();
-            } else {
-                console.log("Video Manager: Player not ready enough for seek. Setting onloadedmetadata listener for seek.");
-                this.player.onloadedmetadata = null; 
-                this.player.onloadedmetadata = () => {
-                    console.log("Video Manager: onloadedmetadata triggered for seek. Calling doSeek().");
-                    doSeek();
-                    this.player.onloadedmetadata = null;
-                };
-                this.player.load(); // Asegurar que la carga está en progreso
-            }
-        },
-
-        hideVideo: function() {
-            if (!this.isReady || !this.player) return;
-            console.log("Video Manager: Hiding video.");
-            if (this.player.src && this.player.src !== '') { 
-                this.player.pause();
-                this.player.removeAttribute('src'); 
-                this.player.load(); // Fundamental para que el navegador libere el recurso
-            }
-            this.player.style.display = 'none';
-            this.currentVideoPath = null;
-            console.log("Video Manager: Video hidden and source removed.");
-        }
-    };
-
-    backgroundVideoManager.init();
-    // MODIFIED: Playlist with updated paths and new videoPath property
-    const playlist = [
-        { title: "гуляю", artist: "ANGUISH, EXILED, elfass", filePath: "assets/SONGSVIDS/ANGUISH_HEXILED_elfass_Gulyau.mp3", albumArtPath: "assets/SONGS_COVERS/gulyau_cover.jpg" },
-        { title: "it's rainy outside", artist: "uselet", filePath: "assets/SONGSVIDS/its_rainy_outside.mp3", albumArtPath: "assets/SONGS_COVERS/its_rainy_outside_cover.jpg" },
-        { 
-            title: "Aegleseeker", 
-            artist: "Silentroom vs Frums", 
-            filePath: "assets/SONGSVIDS/Silentroom_vs_Frums_Aegleseeker.mp3", 
-            albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg", 
-            // TEMPORALMENTE usa un video de prueba conocido:
-            videoPath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748319304/Silentroom_vs_Frums_Aegleseeker_hdzmku.mp4" 
-            // videoPath: "assets/SONGSVIDS/Silentroom_vs_Frums_Aegleseeker.mp4" // Tu video original
-        },
-        { title: "World execute (me)", artist: "Mili", filePath: "assets/SONGSVIDS/World_execute_(me)_Mili.mp3", albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg" }
-    ];
-    let currentSongIndex = 0;
-    let currentP5Song = null;
-    let isPlayerGloballyPlaying = false;
-    let isUserDraggingProgressBar = false;
-    let preloadedP5Sounds = [];
-    let songsToPreloadCount = 0;
-    let allSongsProcessedForPreload = false;
-
-    const workData = [
+    const workData = [ 
         { type: 'banner', text: 'Accepting work offers via my <a href="mailto:kawacoline@gmail.com">work email</a>. I do illustration, animation, web design, and web/app development. :)' },
         { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma']},
         { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js']},
@@ -255,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (section.type !== 'banner' && section.type !== 'footerText') { contentElement.appendChild(sectionDiv); }
         });
     }
-
     modals.forEach(modal => { 
         modalStates.set(modal, {
             isOpen: false, isMaximized: false, isMinimized: false,
@@ -263,25 +112,22 @@ document.addEventListener('DOMContentLoaded', () => {
             current: {} 
         });
     });
-    
     iconItems.forEach(item => { 
         item.addEventListener('click', (e) => {
             e.stopPropagation(); 
             playClickSound(); 
-            handleGlobalUserInteraction(); 
+            handleGlobalUserInteractionForAudioContext(); 
             const modalId = item.dataset.modalTarget; 
             const targetModal = document.querySelector(modalId); 
             if (targetModal) openModal(targetModal); 
         });
     });
-
     function openModal(modal) { 
         const state = modalStates.get(modal); 
         modalBaseZIndex++; 
         modal.style.zIndex = modalBaseZIndex;
         modal.classList.remove('minimized', 'maximized'); 
         Object.assign(modal.style, state.original); 
-        
         if (modal.id === 'work-modal') {
           const contentElement = modal.querySelector('.modal-content');
           if (contentElement && (contentElement.innerHTML.trim() === '' || contentElement.querySelector('.loading-placeholder'))) {
@@ -293,16 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.transform = 'translate(-50%, -50%) scale(1)'; 
         Object.assign(state, { isOpen: true, isMinimized: false, isMaximized: false, current: { left: '50%', top: '50%', width: state.original.width, transform: 'translate(-50%, -50%) scale(1)' } });
     }
-
     function handleModalButtonInteraction(e) { if (e) e.stopPropagation(); playClickSound(); }
-
     modals.forEach(modal => { 
         const state = modalStates.get(modal);
         const closeBtn = modal.querySelector('.close-btn');
         const minimizeBtn = modal.querySelector('.minimize-btn');
         const maximizeBtn = modal.querySelector('.maximize-btn');
-
-        if (closeBtn) {
+        if (closeBtn) { 
             closeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); const wasMinimized = state.isMinimized;
                 modal.classList.remove('active', 'minimized', 'maximized'); 
@@ -312,8 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (wasMinimized) recalculateMinimizedOffsets(); 
             });
         }
-
-        if (minimizeBtn) {
+        if (minimizeBtn) { 
             minimizeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); modalBaseZIndex++; modal.style.zIndex = modalBaseZIndex;
                 if (!state.isMinimized) { 
@@ -334,8 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
-        if (maximizeBtn) {
+        if (maximizeBtn) { 
             maximizeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); modalBaseZIndex++; modal.style.zIndex = modalBaseZIndex;
                 if (!state.isMaximized) { 
@@ -358,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const header = modal.querySelector('.modal-header');
         if (header) makeDraggable(modal, header, state);
     });
-
     function makeDraggable(element, handle, state) { 
         let mouseXStart, mouseYStart, elementXStart, elementYStart, isDragging = false;
         handle.addEventListener('mousedown', (e) => {
@@ -384,438 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!state.isMaximized && !state.isMinimized) Object.assign(state.current, { left: element.style.left, top: element.style.top, transform: 'scale(1)' });
         }
     }
-
-    function formatTime(seconds) { const minutes = Math.floor(seconds / 60); const secs = Math.floor(seconds % 60); return `${minutes}:${secs < 10 ? '0' : ''}${secs}`; }
-
-    function updatePlayerUITrackInfo() { 
-        if (playlist.length === 0 || !playlist[currentSongIndex]) {
-            if (playerSongTitle) playerSongTitle.textContent = "No Song";
-            if (playerSongArtist) playerSongArtist.textContent = "";
-            if (playerAlbumArtImg) playerAlbumArtImg.src = 'assets/SONGS_COVERS/default_art.png'; // MODIFIED PATH
-            return;
-        }
-        const songData = playlist[currentSongIndex];
-        if (playerSongTitle) playerSongTitle.textContent = songData.title;
-        if (playerSongArtist) playerSongArtist.textContent = songData.artist;
-        if (playerAlbumArtImg) {
-            playerAlbumArtImg.src = songData.albumArtPath || 'assets/SONGS_COVERS/default_art.png'; // MODIFIED PATH
-            playerAlbumArtImg.alt = songData.title + " Album Art";
-        }
-    }
-
-    function updatePlayPauseButton(isPlaying) { if (playerPlayPauseIcon) { playerPlayPauseIcon.classList.toggle('fa-pause', isPlaying); playerPlayPauseIcon.classList.toggle('fa-play', !isPlaying); } }
-    
-    function updateProgressUI() { 
-        if (isUserDraggingProgressBar && playerProgressBar && currentP5Song && currentP5Song.isLoaded() && isFinite(currentP5Song.duration())) {
-            const percentage = parseFloat(playerProgressBar.value);
-            const desiredTime = currentP5Song.duration() * (percentage / 100);
-            if (playerCurrentTime) {
-                playerCurrentTime.textContent = formatTime(desiredTime);
-            }
-            return; 
-        }
-
-        if (currentP5Song && currentP5Song.isLoaded()) { 
-            const currentTime = currentP5Song.currentTime(); 
-            const duration = currentP5Song.duration();
-            if (isFinite(duration) && duration > 0) { 
-                if (playerCurrentTime) playerCurrentTime.textContent = formatTime(currentTime);
-                if (playerTotalTime) playerTotalTime.textContent = formatTime(duration);
-                if (playerProgressBar && !isUserDraggingProgressBar) playerProgressBar.value = (currentTime / duration) * 100;
-            } else { 
-                if (playerCurrentTime) playerCurrentTime.textContent = "0:00"; 
-                if (playerTotalTime) playerTotalTime.textContent = "0:00"; 
-                if (playerProgressBar && !isUserDraggingProgressBar) playerProgressBar.value = 0; 
-            }
-        } else { 
-            if (playerCurrentTime) playerCurrentTime.textContent = "0:00"; 
-            if (playerTotalTime) playerTotalTime.textContent = "0:00"; 
-            if (playerProgressBar && !isUserDraggingProgressBar) playerProgressBar.value = 0; 
-        }
-    }
-
-    const sketch = (p) => {
-        let fft, particles = [], musicSuccessfullyStartedThisSession = false;
-        let isProcessingOnended = false, expectingOnEndedDueToManipulation = false;
-
-        p.setup = () => { 
-            const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
-            canvas.parent('p5-visualizer-container'); 
-            p.angleMode(p.DEGREES); 
-            fft = new p5.FFT(0.8, 512); 
-            
-            preloadedP5Sounds = new Array(playlist.length).fill(null); 
-            if (playlist.length > 0) {
-                songsToPreloadCount = playlist.length; 
-                playlist.forEach((song, index) => { 
-                    p.loadSound(song.filePath, 
-                        (loadedSound) => { 
-                            preloadedP5Sounds[index] = loadedSound; 
-                            console.log(`Precargada: ${song.title}`);
-                            p.checkPreloadComplete(); 
-                        }, 
-                        (err) => { 
-                            preloadedP5Sounds[index] = null; 
-                            console.error(`Error precargando ${song.title}:`, err);
-                            p.checkPreloadComplete(); 
-                        }
-                    );
-                });
-            } else { 
-                p.checkPreloadComplete(); 
-            }
-            
-            const initialVolume = volumeSlider ? parseFloat(volumeSlider.value) : 0.7; 
-            lastVolumeBeforeIconClickMute = initialVolume > 0 ? initialVolume : 0.7;
-            updateVolumeIconDisplay(initialVolume); 
-            p.noLoop(); 
-        };
-
-        p.checkPreloadComplete = () => {
-            songsToPreloadCount--; 
-            if (songsToPreloadCount <= 0 && !allSongsProcessedForPreload) {
-                allSongsProcessedForPreload = true; 
-                console.log("Todas las canciones procesadas para precarga.");
-                if (musicPlayerBar) { 
-                    musicPlayerBar.classList.add('ready');
-                }
-                if (playlist.length > 0) {
-                    const firstValidSongIndex = preloadedP5Sounds.findIndex(sound => sound !== null && sound.isLoaded());
-                    if (firstValidSongIndex !== -1) {
-                        currentSongIndex = firstValidSongIndex; 
-                        p.switchToSong(currentSongIndex, false); 
-                    } else { 
-                        console.warn("Ninguna canción pudo ser precargada exitosamente.");
-                        updatePlayerUITrackInfo(); 
-                        if (playerProgressBar) playerProgressBar.disabled = true; 
-                        backgroundVideoManager.hideVideo(); // ADDED: Hide video if no songs load
-                    }
-                } else { 
-                    updatePlayerUITrackInfo(); 
-                    if (playerProgressBar) playerProgressBar.disabled = true;
-                    backgroundVideoManager.hideVideo(); // ADDED: Hide video if playlist empty
-                }
-                const hasValidSongs = preloadedP5Sounds.some(s => s !== null && s.isLoaded());
-                if (playerPlayPauseBtn) playerPlayPauseBtn.disabled = !hasValidSongs;
-                if (playerNextBtn) playerNextBtn.disabled = !hasValidSongs;
-                if (playerPrevBtn) playerPrevBtn.disabled = !hasValidSongs;
-            }
-        };
-
-        p.draw = () => { 
-            p.clear(); // Cambiado de p.background(0) a p.clear() para un canvas transparente
-
-            if (currentP5Song && currentP5Song.isLoaded() && currentP5Song.isPlaying()) {
-                fft.analyze(); 
-                let wave = fft.waveform(); 
-                let currentAmp = fft.getEnergy(20, 200); 
-                
-                p.push(); // Empujamos la matriz de transformación para el visualizador
-                p.translate(p.width / 2, p.height / 2); 
-                
-                if (currentAmp > 210 && particles.length < 200) { 
-                    for (let i = 0; i < p.random(0, 3); i++) particles.push(new Particle(p)); 
-                }
-                for (let i = particles.length - 1; i >= 0; i--) { 
-                    if (!particles[i].edges()) { 
-                        particles[i].update(currentAmp > 210); 
-                        particles[i].show(); 
-                    } else particles.splice(i, 1); 
-                }
-                p.stroke(255); p.strokeWeight(3); p.noFill();
-                for (let t = -1; t <= 1; t += 2) { 
-                    p.beginShape();
-                    for (let i = 0; i <= 180; i += 0.75) { 
-                        let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
-                        let r = p.map(wave[index], -1, 1, 250, 550); 
-                        p.vertex(r * p.sin(i) * t, r * p.cos(i)); 
-                    }
-                    p.endShape();
-                }
-                p.pop(); // Restaura la matriz de transformación
-            }
-            updateProgressUI(); 
-        };
-
-        p.windowResized = () => p.resizeCanvas(p.windowWidth, p.windowHeight);
-
-        p.switchToSong = (newIndex, playAfterSwitch, seekTime = -1) => {
-            if (!allSongsProcessedForPreload || preloadedP5Sounds.length === 0) {
-                console.warn("Aún no se han procesado las canciones para precarga o no hay canciones.");
-                return;
-            }
-
-            backgroundVideoManager.hideVideo(); // Use manager to hide previous video
-
-            if (currentP5Song) {
-                if (currentP5Song.isPlaying()) {
-                    currentP5Song.stop();
-                }
-                currentP5Song.onended(() => {}); 
-                if (fft) fft.setInput(null); 
-            }
-            
-            currentSongIndex = (newIndex + playlist.length) % playlist.length; 
-            currentP5Song = preloadedP5Sounds[currentSongIndex]; 
-            const newSongData = playlist[currentSongIndex]; // Get current song data for video path
-
-            if (!currentP5Song || !currentP5Song.isLoaded()) { 
-                console.error(`La canción ${newSongData?.title} no está disponible o no se cargó correctamente.`);
-                updatePlayerUITrackInfo(); 
-                updatePlayPauseButton(false);
-                if (p.noLoop) p.noLoop();
-                backgroundVideoManager.hideVideo(); // Ensure video is hidden if song fails
-                return;
-            }
-            
-            backgroundVideoManager.loadVideo(newSongData); // Use manager to load video
-
-            updatePlayerUITrackInfo(); 
-            if (playerProgressBar) playerProgressBar.value = 0; 
-            if (playerCurrentTime) playerCurrentTime.textContent = "0:00";
-            if (playerTotalTime && isFinite(currentP5Song.duration())) playerTotalTime.textContent = formatTime(currentP5Song.duration());
-            else if (playerTotalTime) playerTotalTime.textContent = "0:00";
-
-            currentP5Song.setVolume(volumeSlider ? parseFloat(volumeSlider.value) : 0.7);
-            if (fft) fft.setInput(currentP5Song); 
-
-            const handleSongEnd = () => {
-                if (isProcessingOnended) { return; }
-                isProcessingOnended = true;
-                const songTitleCb = playlist[currentSongIndex]?.title; 
-                
-                backgroundVideoManager.hideVideo(); // Use manager to hide video on song end
-
-                if (expectingOnEndedDueToManipulation) { 
-                    expectingOnEndedDueToManipulation = false; 
-                    // ... (rest of logic)
-                } else if (isPlayerGloballyPlaying) { 
-                    console.log(`Fin natural de "${songTitleCb}". Reproduciendo siguiente canción.`);
-                    p.playNextSong(); 
-                } else { 
-                    updatePlayPauseButton(false); 
-                    if (p.noLoop) p.noLoop(); 
-                }
-                setTimeout(() => { isProcessingOnended = false; }, 100);
-            };
-            currentP5Song.onended(handleSongEnd);
-
-            if (seekTime >= 0 && isFinite(currentP5Song.duration()) && currentP5Song.duration() > 0 ) {
-                currentP5Song.jump(seekTime);
-                 if (newSongData.videoPath) { // MODIFIED: Check if video path exists
-                    backgroundVideoManager.seekVideo(seekTime); // Use manager to seek video
-                }
-            }
-
-            if (playAfterSwitch && isPlayerGloballyPlaying) {
-                p.playCurrentSong(); 
-            } else { 
-                updatePlayPauseButton(false); 
-                if (p.noLoop && !isUserDraggingProgressBar) p.noLoop(); 
-                updateProgressUI(); 
-                if (newSongData.videoPath) { // MODIFIED: Check if video path exists
-                    backgroundVideoManager.pauseVideo(); // Pause video if not auto-playing
-                }
-            }
-        };
-        
-        p.startMusicAfterUserInteraction = () => { 
-            if (p.getAudioContext().state !== 'running') { 
-                p.userStartAudio().then(() => { 
-                    musicSuccessfullyStartedThisSession = true; 
-                    if (isPlayerGloballyPlaying && currentP5Song && currentP5Song.isLoaded() && !currentP5Song.isPlaying()) {
-                        p.playCurrentSong();
-                    }
-                }).catch(e => console.error("Error starting audio context:", e));
-            } else { 
-                musicSuccessfullyStartedThisSession = true;
-                 if (isPlayerGloballyPlaying && currentP5Song && currentP5Song.isLoaded() && !currentP5Song.isPlaying()) {
-                    p.playCurrentSong();
-                }
-            }
-        };
-        
-        p.playCurrentSong = () => {
-            if (!allSongsProcessedForPreload) { /* ... */ return; }
-            const currentSongData = playlist[currentSongIndex]; // Get current song data
-            if (!currentP5Song || !currentP5Song.isLoaded()) { /* ... */ return; }
-            if (p.getAudioContext().state !== 'running') { p.startMusicAfterUserInteraction(); return; }
-            
-            expectingOnEndedDueToManipulation = false; 
-            if (!currentP5Song.isPlaying()) { 
-                currentP5Song.play(); 
-            }
-            if (currentSongData.videoPath) { // MODIFIED: Check if video path exists
-                backgroundVideoManager.playVideo(currentP5Song.currentTime()); // Use manager
-            }
-            updatePlayPauseButton(true); 
-            if (p.loop) p.loop(); 
-        };
-            
-        p.pauseCurrentSong = () => { 
-            const currentSongData = playlist[currentSongIndex]; // Get current song data
-            if (currentP5Song && currentP5Song.isPlaying()) { 
-                expectingOnEndedDueToManipulation = true; 
-                currentP5Song.pause(); 
-                if (currentSongData.videoPath) { // MODIFIED: Check if video path exists
-                    backgroundVideoManager.pauseVideo(); // Use manager
-                }
-                updatePlayPauseButton(false); 
-                if (p.noLoop) p.noLoop(); 
-            }
-        };
-
-        p.playNextSong = () => { 
-            if (!allSongsProcessedForPreload || preloadedP5Sounds.length === 0) return; 
-            let nextIndex = (currentSongIndex + 1) % playlist.length; 
-            let initialNextIndex = nextIndex;
-            while(!preloadedP5Sounds[nextIndex] || !preloadedP5Sounds[nextIndex].isLoaded()){
-                nextIndex = (nextIndex + 1) % playlist.length;
-                if(nextIndex === initialNextIndex) { 
-                    console.warn("No hay más canciones válidas para reproducir hacia adelante.");
-                    return;
-                }
-            }
-            p.switchToSong(nextIndex, isPlayerGloballyPlaying); 
-        };
-        p.playPrevSong = () => { 
-            if (!allSongsProcessedForPreload || preloadedP5Sounds.length === 0) return;
-            let prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length; 
-            let initialPrevIndex = prevIndex;
-            while(!preloadedP5Sounds[prevIndex] || !preloadedP5Sounds[prevIndex].isLoaded()){
-                prevIndex = (prevIndex - 1 + playlist.length) % playlist.length;
-                if(prevIndex === initialPrevIndex) { 
-                    console.warn("No hay más canciones válidas para reproducir hacia atrás.");
-                    return;
-                }
-            }
-            p.switchToSong(prevIndex, isPlayerGloballyPlaying); 
-        };
-
-        p.setAudioVolume = (vol) => { if (currentP5Song && currentP5Song.isLoaded()) currentP5Song.setVolume(vol); if (vol > 0) lastVolumeBeforeIconClickMute = vol; };
-        p.getAudioVolume = () => (currentP5Song && currentP5Song.isLoaded() && typeof currentP5Song.getVolume === 'function') ? currentP5Song.getVolume() : (volumeSlider ? parseFloat(volumeSlider.value) : 0.7);
-        p.getLastNonZeroVolume = () => lastVolumeBeforeIconClickMute > 0 ? lastVolumeBeforeIconClickMute : 0.7;
-
-        p.seekSong = (percentage) => { 
-            if (currentP5Song && currentP5Song.isLoaded() && isFinite(currentP5Song.duration()) && currentP5Song.duration() > 0) {
-                const time = currentP5Song.duration() * (percentage / 100); 
-                expectingOnEndedDueToManipulation = true; 
-                currentP5Song.jump(time); 
-                
-                const currentSongData = playlist[currentSongIndex]; // Get current song data
-                if (currentSongData.videoPath) { // MODIFIED: Check if video path exists
-                    backgroundVideoManager.seekVideo(time); // Use manager
-                     // If audio is playing and video was paused, try to play video
-                    if (currentP5Song.isPlaying() && backgroundVideoManager.player && backgroundVideoManager.player.paused) {
-                        backgroundVideoManager.playVideo(time);
-                    }
-                }
-                
-                updateProgressUI(); 
-
-                if (isPlayerGloballyPlaying && !currentP5Song.isPlaying()) { // p5 jump doesn't auto-resume
-                    // If you want to resume audio and video on seek when paused but globally playing:
-                    // p.playCurrentSong(); 
-                }
-            }
-        };
-    }; // End of sketch function
-
-    class Particle { 
-        constructor(pInstance) { this.p = pInstance; this.pos = this.p.createVector(0,0); this.vel = p5.Vector.random2D().mult(this.p.random(1,3)); this.acc = p5.Vector.random2D().mult(this.p.random(0.01,0.05)); this.w = this.p.random(2,5); this.color = [this.p.random(200,255),this.p.random(200,255),this.p.random(200,255),this.p.random(100,200)]; this.lifespan = 255; }
-        update(bassKicked) { this.vel.add(this.acc); this.pos.add(this.vel); if(bassKicked) { let push = this.pos.copy().normalize().mult(this.p.random(1,2)); this.vel.add(push); } this.vel.limit(4); this.lifespan -= 1.0; }
-        edges() { return this.pos.mag() > this.p.max(this.p.width,this.p.height) * 0.85 || this.lifespan < 0; }
-        show() { this.p.noStroke(); this.p.fill(this.color[0],this.color[1],this.color[2],this.lifespan); this.p.ellipse(this.pos.x,this.pos.y,this.w); }
-    }
-
-    p5SketchInstance = new p5(sketch);
-
-    if (playerPlayPauseBtn) playerPlayPauseBtn.addEventListener('click', () => { 
-        playClickSound(); handleGlobalUserInteraction(); 
-        isPlayerGloballyPlaying = !isPlayerGloballyPlaying; 
-        if (isPlayerGloballyPlaying) { 
-            if (p5SketchInstance.playCurrentSong) p5SketchInstance.playCurrentSong();
-        } else { 
-            if (p5SketchInstance.pauseCurrentSong) p5SketchInstance.pauseCurrentSong();
-        }
-    });
-    if (playerNextBtn) playerNextBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteraction(); if (p5SketchInstance.playNextSong) p5SketchInstance.playNextSong(); });
-    if (playerPrevBtn) playerPrevBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteraction(); if (p5SketchInstance.playPrevSong) p5SketchInstance.playPrevSong(); });
-
-    if (playerProgressBar) {
-        playerProgressBar.addEventListener('mousedown', () => {
-            isUserDraggingProgressBar = true; 
-        });
-        playerProgressBar.addEventListener('input', (e) => {
-            if (isUserDraggingProgressBar) { 
-                updateProgressUI(); 
-            }
-        });
-        playerProgressBar.addEventListener('change', (e) => {
-            playClickSound(); 
-            const seekPercentage = parseFloat(e.target.value); 
-            if (isUserDraggingProgressBar) { 
-                isUserDraggingProgressBar = false; 
-                if (p5SketchInstance.seekSong && currentP5Song && currentP5Song.isLoaded()) { 
-                    p5SketchInstance.seekSong(seekPercentage); 
-                }
-            }
-        });
-        document.addEventListener('mouseup', (e) => { 
-            if (isUserDraggingProgressBar) { 
-                isUserDraggingProgressBar = false; 
-                const seekPercentage = parseFloat(playerProgressBar.value); 
-                if (p5SketchInstance.seekSong && currentP5Song && currentP5Song.isLoaded()) {
-                    p5SketchInstance.seekSong(seekPercentage);
-                }
-                updateProgressUI(); 
-            }
-        });
-    }
-
-    function updateVolumeIconDisplay(volume) { 
-        if (!musicVolumeIcon) return; 
-        musicVolumeIcon.classList.remove('fa-volume-up','fa-volume-down','fa-volume-mute','fa-volume-off');
-        if (volume === 0) musicVolumeIcon.classList.add('fa-volume-off');      
-        else if (volume < 0.01) musicVolumeIcon.classList.add('fa-volume-mute'); 
-        else if (volume < 0.5) musicVolumeIcon.classList.add('fa-volume-down');  
-        else musicVolumeIcon.classList.add('fa-volume-up');      
-    }
-    
-    if (volumeSlider) {
-      volumeSlider.value = lastVolumeBeforeIconClickMute; 
-      updateVolumeIconDisplay(lastVolumeBeforeIconClickMute); 
-    }
-
-    if (musicVolumeIcon && volumeSlider && p5SketchInstance) { 
-        volumeSlider.addEventListener('input', (e) => { 
-            const vol = parseFloat(e.target.value); 
-            if (p5SketchInstance.setAudioVolume) p5SketchInstance.setAudioVolume(vol); 
-            updateVolumeIconDisplay(vol); 
-        });
-        volumeSlider.addEventListener('change', playClickSound); 
-        musicVolumeIcon.addEventListener('click', (e) => {
-            e.stopPropagation(); playClickSound(); handleGlobalUserInteraction();
-            const currentVol = p5SketchInstance.getAudioVolume ? p5SketchInstance.getAudioVolume() : (volumeSlider ? parseFloat(volumeSlider.value) : 0.7);
-            const volToSet = currentVol > 0 ? 0 : (p5SketchInstance.getLastNonZeroVolume ? p5SketchInstance.getLastNonZeroVolume() : 0.7);
-            if (p5SketchInstance.setAudioVolume) p5SketchInstance.setAudioVolume(volToSet); 
-            if (volumeSlider) volumeSlider.value = volToSet; 
-            updateVolumeIconDisplay(volToSet); 
-        });
-    } else console.warn("Controles de volumen (barra de reproductor) no encontrados o sketch p5 no listo.");
-
-    function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
-    
-    let globalUserInteractionHasOccurred = false;
-    function handleGlobalUserInteraction() { 
-        if (!globalUserInteractionHasOccurred && p5SketchInstance && p5SketchInstance.startMusicAfterUserInteraction) {
-            p5SketchInstance.startMusicAfterUserInteraction(); 
-            globalUserInteractionHasOccurred = true; 
-        }
-    }
-    document.body.addEventListener('click', handleGlobalUserInteraction, { once: true, capture: true });
-    document.body.addEventListener('keydown', handleGlobalUserInteraction, { once: true, capture: true });
-
     const baseMinimizedInitialOffset = 15, minimizedWindowSpacing = 10, minimizedWindowWidth = 220;
     function recalculateMinimizedOffsets() { 
         let currentOffset = baseMinimizedInitialOffset; const minimized = [];
@@ -823,22 +231,101 @@ document.addEventListener('DOMContentLoaded', () => {
         minimized.sort((a,b) => (a.state.minimizedOffset || baseMinimizedInitialOffset) - (b.state.minimizedOffset || baseMinimizedInitialOffset));
         minimized.forEach(item => { item.modal.style.setProperty('--minimized-left', `${currentOffset}px`); item.state.minimizedOffset = currentOffset; currentOffset += minimizedWindowWidth + minimizedWindowSpacing; });
     }
+    function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
 
-    // Initial UI setup
-    if (playlist.length > 0) { 
-        updatePlayerUITrackInfo(); 
-        updatePlayPauseButton(false); 
-        if (playerProgressBar) playerProgressBar.value = 0; 
-        if (playerCurrentTime) playerCurrentTime.textContent = "0:00"; 
-        if (playerTotalTime) playerTotalTime.textContent = "0:00"; 
-    } else { 
-        if (playerSongTitle) playerSongTitle.textContent = "No Songs in Playlist"; 
-        if (playerSongArtist) playerSongArtist.textContent = "";
-        if (playerAlbumArtImg) playerAlbumArtImg.src = 'assets/SONGS_COVERS/default_art.png'; // MODIFIED PATH
-        [playerPlayPauseBtn, playerNextBtn, playerPrevBtn, playerProgressBar].forEach(el => { if (el) el.disabled = true; });
-        if (musicPlayerBar) { 
-            musicPlayerBar.classList.remove('ready');
-        }
-        backgroundVideoManager.hideVideo(); // ADDED: Hide video if playlist empty
+    if (playerPlayPauseBtn) { playerPlayPauseBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.togglePlayPause(); }); }
+    if (playerNextBtn) { playerNextBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.playNextSong(); }); }
+    if (playerPrevBtn) { playerPrevBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.playPrevSong(); }); }
+    
+    if (playerProgressBar) {
+        playerProgressBar.addEventListener('input', (e) => {
+            videoPlayerManager.isUserDraggingProgressBar = true;
+            if (videoPlayerManager.uiPlayerCurrentTime && videoPlayerManager.player) { // Check player exists
+                 // Formatear el tiempo basado en el valor del slider, no en player.duration si este aún no está listo
+                const duration = parseFloat(playerProgressBar.max) || 0; // Usar max de la barra o 0
+                const desiredTime = parseFloat(e.target.value);
+                videoPlayerManager.uiPlayerCurrentTime.textContent = videoPlayerManager.formatTime(desiredTime);
+            }
+        });
+        playerProgressBar.addEventListener('change', (e) => {
+            playClickSound();
+            videoPlayerManager.seek(parseFloat(e.target.value));
+            videoPlayerManager.isUserDraggingProgressBar = false;
+        });
+        document.addEventListener('mouseup', () => {
+            if (videoPlayerManager.isUserDraggingProgressBar) {
+                videoPlayerManager.isUserDraggingProgressBar = false;
+                // El 'change' event del slider debería haber manejado el seek final
+            }
+        });
     }
-});
+
+    if (volumeSlider) {
+        // La inicialización del volumen del player ya se hace en videoPlayerManager.init
+        // Aquí solo aseguramos que el slider refleje ese estado inicial si es necesario
+        // o que el updateVolumeIconDisplay se llame
+        if (videoPlayerManager.player) {
+            updateVolumeIconDisplay(videoPlayerManager.player.volume, videoPlayerManager.player.muted);
+        }
+
+        volumeSlider.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            videoPlayerManager.setVolume(vol);
+            // updateVolumeIconDisplay se llamará por el evento 'volumechange' del video player
+        });
+        volumeSlider.addEventListener('change', playClickSound);
+    }
+    if (musicVolumeIcon) {
+        musicVolumeIcon.addEventListener('click', () => {
+            playClickSound();
+            handleGlobalUserInteractionForAudioContext();
+            videoPlayerManager.toggleMute();
+        });
+    }
+
+    function updateVolumeIconDisplay(volume, muted) {
+        if (!musicVolumeIcon) return;
+        musicVolumeIcon.classList.remove('fa-volume-up', 'fa-volume-down', 'fa-volume-mute', 'fa-volume-off');
+        if (muted || volume === 0) {
+            musicVolumeIcon.classList.add('fa-volume-off');
+        } else if (volume < 0.01) {
+            musicVolumeIcon.classList.add('fa-volume-mute');
+        } else if (volume < 0.5) {
+            musicVolumeIcon.classList.add('fa-volume-down');
+        } else {
+            musicVolumeIcon.classList.add('fa-volume-up');
+        }
+    }
+
+    let globalUserInteractionHasOccurred = false;
+    function handleGlobalUserInteractionForAudioContext() {
+        if (!globalUserInteractionHasOccurred) {
+            let ctxToResume = null;
+            // Priorizar el contexto de p5 si ya está en el videoPlayerManager
+            if (videoPlayerManager.audioContextForP5 && videoPlayerManager.audioContextForP5.state === 'suspended') {
+                ctxToResume = videoPlayerManager.audioContextForP5;
+            } else if (audioVisualizer.p5Instance && typeof audioVisualizer.p5Instance.getAudioContext === 'function') {
+                // Si no, intentar obtenerlo de la instancia p5 del visualizador
+                let p5Ctx = audioVisualizer.p5Instance.getAudioContext();
+                if (p5Ctx && p5Ctx.state === 'suspended') {
+                    ctxToResume = p5Ctx;
+                }
+            }
+
+            if (ctxToResume) {
+                ctxToResume.resume().then(() => {
+                    console.log("AudioContext resumed by global interaction. State:", ctxToResume.state);
+                    // Si el reproductor estaba intentando sonar y falló por esto, podría reintentar
+                    if (videoPlayerManager.isGloballyPlaying && videoPlayerManager.player && videoPlayerManager.player.paused) {
+                        console.log("Retrying play after AudioContext resume.");
+                        videoPlayerManager.player.play().catch(e => console.warn("Error retrying play:", e));
+                    }
+                }).catch(e => console.error("Error resuming AudioContext globally:", e));
+            }
+            globalUserInteractionHasOccurred = true;
+        }
+    }
+    document.body.addEventListener('click', handleGlobalUserInteractionForAudioContext, { once: true, capture: true });
+    document.body.addEventListener('keydown', handleGlobalUserInteractionForAudioContext, { once: true, capture: true });
+
+}); // Fin de DOMContentLoaded
