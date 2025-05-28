@@ -49,18 +49,16 @@ const audioVisualizer = {
             console.log("Audio Visualizer: FFT input explicitly set to null.");
         }
 
-        // Importante: Si mediaElementSource es una instancia de p5.MediaElement,
-        // p5.sound podría tener referencias internas a ella.
-        // Aunque no hay un método 'dispose()' estándar en p5.MediaElement como en otros objetos de p5.sound,
-        // anular la referencia y asegurarse de que el FFT no la use es clave.
-        // p5.MediaElement sí tiene un método .disconnect() que lo desconecta del master output
-        // y de cualquier cosa a la que estuviera conectado (como un FFT).
         if (this.mediaElementSource) {
             if (typeof this.mediaElementSource.disconnect === 'function') {
-                this.mediaElementSource.disconnect(); // Desconecta del pipeline de p5.sound (master, FFTs)
-                console.log("Audio Visualizer: Called .disconnect() on existing p5.MediaElement source.");
+                try {
+                    this.mediaElementSource.disconnect();
+                    console.log("Audio Visualizer: Called .disconnect() on existing p5.MediaElement source.");
+                } catch (e) {
+                    console.warn("Audio Visualizer: Error during this.mediaElementSource.disconnect():", e.message);
+                }
             }
-            this.mediaElementSource = null; // Eliminar la referencia al antiguo p5.MediaElement
+            this.mediaElementSource = null;
             console.log("Audio Visualizer: this.mediaElementSource set to null.");
         }
 
@@ -68,7 +66,6 @@ const audioVisualizer = {
         if (this.p5Instance && this.p5Instance.isLooping()) {
             this.p5Instance.noLoop();
             console.log("Audio Visualizer: p5 loop stopped.");
-            // Solo limpiar si el loop se detuvo y no hay intención de redibujar inmediatamente.
             if (this.p5Instance && typeof this.p5Instance.clear === 'function') {
                 try {
                     this.p5Instance.clear(); // Limpiar el canvas

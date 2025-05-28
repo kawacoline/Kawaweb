@@ -131,23 +131,27 @@ const videoPlayerManager = {
     _createAndConnectMediaElement: function(p5_instance) {
         if (!this.player.currentSrc) {
             console.warn("VideoPlayerManager: _createAndConnectMediaElement llamado sin currentSrc en el player.");
+            if (this.audioVisualizerInstance) {
+                this.audioVisualizerInstance.disconnectAudioSource(); // Asegurar que el visualizador se limpie
+            }
             return;
         }
 
         try {
-            // Si ya existe un p5MediaElement Y está asociado con el MISMO this.player HTML element
-            // Y ese p5MediaElement es una instancia de p5.MediaElement (lo que implica que ya pasó por esta lógica antes)
-            // Intenta desconectarlo antes de crear uno nuevo para el mismo this.player.
-            // Esto es para intentar prevenir el "HTMLMediaElement already connected previously".
             if (this.p5MediaElement && this.p5MediaElement.elt === this.player && typeof this.p5MediaElement.disconnect === 'function') {
                 console.log("Video Player Manager: Desconectando p5MediaElement existente del mismo HTMLVideoElement antes de recrear.");
-                this.p5MediaElement.disconnect(); // Desconecta del pipeline de p5.sound
-                // Aunque disconnectAudioSource en el visualizador también lo llama,
-                // hacerlo aquí justo antes de la recreación es más directo para este problema.
+                this.p5MediaElement.disconnect();
             }
-            // Y ahora, nos aseguramos de anular la referencia *antes* de intentar crear una nueva
-            // para que no se confunda con el anterior si la desconexión no fue "total" para el GC.
             this.p5MediaElement = null;
+
+            // >>> INICIO DE LA MODIFICACIÓN IMPORTANTE <<<
+            // Intenta eliminar la propiedad de rastreo interno de p5.js del elemento de video.
+            // Esto ayuda a prevenir el error "HTMLMediaElement already connected previously".
+            if (this.player._prevNodeId) {
+                console.log("Video Player Manager: Eliminando _prevNodeId del elemento HTML video.");
+                delete this.player._prevNodeId;
+            }
+            // >>> FIN DE LA MODIFICACIÓN IMPORTANTE <<<
 
             console.log("Video Player Manager: Creando nueva instancia de p5.MediaElement.");
             if (typeof p5 !== 'undefined' && typeof p5.MediaElement === 'function') {
@@ -161,14 +165,12 @@ const videoPlayerManager = {
             console.log("Video Player Manager: p5.MediaElement creado.");
 
         } catch (e) {
-            console.error("Error al crear/reconectar p5.MediaElement:", e); // Mensaje de error más específico
-            // El error "InvalidStateError" probablemente ocurrirá aquí.
+            console.error("Error al crear/reconectar p5.MediaElement:", e);
             if (this.audioVisualizerInstance) {
-                // Si la creación falla, nos aseguramos que el visualizador sepa que no hay fuente
                 this.audioVisualizerInstance.disconnectAudioSource();
             }
-            this.p5MediaElement = null; // Asegurarse de que esté nulo si falló
-            return;
+            this.p5MediaElement = null;
+            return; // Salir si la creación falló
         }
 
         if (this.audioVisualizerInstance && this.p5MediaElement) {
