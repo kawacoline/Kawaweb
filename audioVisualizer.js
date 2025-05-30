@@ -12,19 +12,20 @@ const audioVisualizer = {
         this.p5SetupDone = false;
     },
 
-    connectAudioSource: function(p5MediaElement) {
+    connectAudioSource: function(p5MediaElementInput) {
         if (!this.p5Instance) {
             console.error("Audio Visualizer: p5 instance not available for connectAudioSource.");
             return;
         }
-        if (!p5MediaElement || !p5MediaElement.elt) { // .elt es el elemento HTML subyacente
-            console.warn("Audio Visualizer: Invalid p5MediaElement for connection.");
-            this.disconnectAudioSource(); 
+        if (!p5MediaElementInput || !p5MediaElementInput.elt) {
+            console.warn("Audio Visualizer: Invalid p5.MediaElement for connection.");
+            this.disconnectAudioSource();
             return;
         }
-        this.mediaElementSource = p5MediaElement; // Guardar la instancia p5.MediaElement
-        
-        if (!this.fft && this.p5Instance) { // Crear FFT si no existe
+
+        this.mediaElementSource = p5MediaElementInput;
+
+        if (!this.fft && this.p5Instance) {
              this.fft = new this.p5Instance.constructor.FFT(0.8, 256);
              console.log("Audio Visualizer: FFT created on demand.");
         }
@@ -43,23 +44,10 @@ const audioVisualizer = {
     },
 
     disconnectAudioSource: function() {
-        console.log("Audio Visualizer: Attempting to disconnect audio source.");
+        console.log("Audio Visualizer: Disconnecting FFT input.");
         if (this.fft) {
-            this.fft.setInput(null); // Desconectar FFT de la fuente actual
+            this.fft.setInput(null);
             console.log("Audio Visualizer: FFT input explicitly set to null.");
-        }
-
-        if (this.mediaElementSource) {
-            if (typeof this.mediaElementSource.disconnect === 'function') {
-                try {
-                    this.mediaElementSource.disconnect();
-                    console.log("Audio Visualizer: Called .disconnect() on existing p5.MediaElement source.");
-                } catch (e) {
-                    console.warn("Audio Visualizer: Error during this.mediaElementSource.disconnect():", e.message);
-                }
-            }
-            this.mediaElementSource = null;
-            console.log("Audio Visualizer: this.mediaElementSource set to null.");
         }
 
         this.isDrawing = false;
@@ -68,7 +56,7 @@ const audioVisualizer = {
             console.log("Audio Visualizer: p5 loop stopped.");
             if (this.p5Instance && typeof this.p5Instance.clear === 'function') {
                 try {
-                    this.p5Instance.clear(); // Limpiar el canvas
+                    this.p5Instance.clear();
                     console.log("Audio Visualizer: Canvas cleared after stopping loop.");
                 } catch (e) {
                     console.warn("Error clearing canvas during disconnect:", e);
