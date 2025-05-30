@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modals = document.querySelectorAll('.modal');
     const clickSound = document.getElementById('clickSound');
     const musicPlayerBarDOM = document.getElementById('music-player-bar'); // Renombrado para evitar confusión con variable global
-    
     const playerPrevBtn = document.getElementById('player-prev-btn');
     const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
     const playerNextBtn = document.getElementById('player-next-btn');
@@ -63,9 +62,9 @@ new p5(audioVisualizer.sketch);
         { type: 'banner', text: 'ффф <a href="mailto:kawacoline@gmail.com">work email</a>. ффф I do illustration, animation, web design, and web/app development. :)' },
         { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma']},
         { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js']},
-        { type: 'videos', title: 'ANIMATIONS', items: [ { title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: '黒桃の触手 Battle Collaboration 紅桃の鉄腹 (by 夕䪯)', youtubeId: 'PBfBxPBUdhg' }, { title: 'WEAPON MASTER 2', youtubeId: '20a4iQucxWM' }, { title: 'WEAPON MASTER', youtubeId: 'IrVZW3gTxMs' } ]},
-        { type: 'gallery', title: 'ILLUSTRATION', items: [ 'https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://pbs.twimg.com/media/F-SGKcnXwAAL1hd?format=jpg&name=large', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://media.discordapp.net/attachments/672451986469158923/1377114924454510592/image.png?ex=6837c9b7&is=68367837&hm=16f73c05de7aa5d257d6236685249201fbbfdafb92824f7fca69c2fd7949b5ac&=&format=webp&quality=lossless', ]},
-        { type: 'devProjects', title: 'PROJECTS', items: [ { title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>DevelUP!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Portfolio', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", } ]},
+        { type: 'videos', title: 'ANIMATIONS', items: [ { title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: '黒桃の触手 Battle Collaboration 紅桃の鉄腹 (by 夕䪯)', youtubeId: 'PBfBxPBUdhg' }, { title: 'WEAPON MASTER 2', youtubeId: '20a4iQucxWM' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' } ]},
+        { type: 'gallery', title: 'ILLUSTRATION', items: [ 'https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://pbs.twimg.com/media/F-SGKcnXwAAL1hd?format=jpg&name=large', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://imgur.com/Xo9eszl', ]},
+        { type: 'devProjects', title: 'PROJECTS', items: [ { title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>DevelUP!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://imgur.com/jmfSRhU', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", } ]},
         { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>."}
     ];
 
