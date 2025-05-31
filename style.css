@@ -14,7 +14,7 @@
 }
 
 html { height: 100%; }
-#chatbase-bubble-button { float: left }
+
 body {
     margin: 0; padding: 0; font-family: var(--font-primary);
     min-height: 100%; position: relative; overflow: hidden;

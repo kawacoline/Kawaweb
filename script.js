@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const volumeSlider = document.getElementById('volume-slider');
     const musicVolumeIcon = document.getElementById('music-volume-icon');
 
+
     const playlistData = [
         { title: "駿", artist: "Nhelv / Silentroom", 
           filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396118/xtlnbonlqhgycnfgluhj.webm", 
@@ -63,8 +64,8 @@ new p5(audioVisualizer.sketch);
         { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma']},
         { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js']},
         { type: 'videos', title: 'ANIMATIONS', items: [ { title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: '黒桃の触手 Battle Collaboration 紅桃の鉄腹 (by 夕䪯)', youtubeId: 'PBfBxPBUdhg' }, { title: 'WEAPON MASTER 2', youtubeId: '20a4iQucxWM' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' } ]},
-        { type: 'gallery', title: 'ILLUSTRATION', items: [ 'https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://pbs.twimg.com/media/F-SGKcnXwAAL1hd?format=jpg&name=large', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://imgur.com/Xo9eszl', ]},
-        { type: 'devProjects', title: 'PROJECTS', items: [ { title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>DevelUP!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://imgur.com/jmfSRhU', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", } ]},
+        { type: 'gallery', title: 'ILLUSTRATION', items: [ 'https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://pbs.twimg.com/media/F-SGKcnXwAAL1hd?format=jpg&name=large', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://i.imgur.com/Xo9eszl.jpeg', ]},
+        { type: 'devProjects', title: 'PROJECTS', items: [ { title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>DevelUP!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", } ]},
         { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>."}
     ];
 
@@ -315,4 +316,6 @@ new p5(audioVisualizer.sketch);
     } else {
         console.warn("Botón para ocultar contenido o contentWrapper no encontrado.");
     }
+    
 });
+
