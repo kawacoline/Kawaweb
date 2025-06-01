@@ -1,14 +1,20 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     const iconItems = document.querySelectorAll('.icon-item');
     const modals = document.querySelectorAll('.modal');
     const clickSound = document.getElementById('clickSound');
-    const musicPlayerBarDOM = document.getElementById('music-player-bar'); // Renombrado para evitar confusión con variable global
+    const musicPlayerBarDOM = document.getElementById('music-player-bar');
     const playerPrevBtn = document.getElementById('player-prev-btn');
     const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
     const playerNextBtn = document.getElementById('player-next-btn');
     const playerProgressBar = document.getElementById('player-progress-bar');
     const volumeSlider = document.getElementById('volume-slider');
     const musicVolumeIcon = document.getElementById('music-volume-icon');
+
+    // NUEVO: Referencia al botón de colapsar reproductor
+    const togglePlayerBarBtn = document.getElementById('toggle-player-bar-btn');
+    const togglePlayerBarIcon = togglePlayerBarBtn ? togglePlayerBarBtn.querySelector('i') : null;
+
     const playlistData = [
         {
             title: "Sonar", artist: "Renaud Hallee",
@@ -46,21 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkP5SystemReadyAndInitPlayer() {
         let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance;
-        // Ya no necesitamos verificar p5SoundReady aquí, videoPlayerManager lo hará internamente
 
         if (p5CoreAndSketchSetupDone) {
             console.log("Script.js: Sketch de p5 (audioVisualizer) está listo. Inicializando Video Player Manager.");
             videoPlayerManager.init({
                 playlist: playlistData,
                 audioVisualizer: audioVisualizer,
-                p5Instance: audioVisualizer.p5Instance // <--- AÑADIR ESTA LÍNEA
+                p5Instance: audioVisualizer.p5Instance
             });
 
             if (musicPlayerBarDOM && videoPlayerManager.playlist.length > 0 && videoPlayerManager.player) {
                 musicPlayerBarDOM.classList.add('ready');
-                console.log("Script.js: Barra de reproductor activada.");
+                if (togglePlayerBarBtn) togglePlayerBarBtn.classList.add('ready'); // NUEVO: Hacer visible el botón de colapso
+                console.log("Script.js: Barra de reproductor y botón de colapso activados.");
             } else if (musicPlayerBarDOM) {
                 musicPlayerBarDOM.classList.remove('ready');
+                if (togglePlayerBarBtn) togglePlayerBarBtn.classList.remove('ready'); // NUEVO
                 console.warn("Script.js: No se activa la barra del reproductor.");
             }
         } else {
@@ -244,16 +251,20 @@ document.addEventListener('DOMContentLoaded', () => {
             videoPlayerManager.seek(parseFloat(e.target.value));
             videoPlayerManager.isUserDraggingProgressBar = false;
         });
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('mouseup', () => { // Asegurar que el arrastre termine globalmente
             if (videoPlayerManager.isUserDraggingProgressBar) {
-                videoPlayerManager.isUserDraggingProgressBar = false;
+                 videoPlayerManager.isUserDraggingProgressBar = false;
+                 // Si se soltó fuera de la barra, actualiza con el último valor del input
+                 if (videoPlayerManager.player && playerProgressBar.value !== videoPlayerManager.player.currentTime) {
+                    videoPlayerManager.seek(parseFloat(playerProgressBar.value));
+                 }
             }
         });
     }
 
     if (volumeSlider) {
-        if (videoPlayerManager.player) {
-            updateVolumeIconDisplay(videoPlayerManager.player.volume, videoPlayerManager.player.muted);
+        if (videoPlayerManager.player) { // Ya no es necesario llamar a updateVolumeIconDisplay aquí
+            // videoPlayerManager.player.volume y muted se setean en init de videoPlayerManager
         }
         volumeSlider.addEventListener('input', (e) => {
             const vol = parseFloat(e.target.value);
@@ -269,19 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateVolumeIconDisplay(volume, muted) {
-        if (!musicVolumeIcon) return;
-        musicVolumeIcon.classList.remove('fa-volume-up', 'fa-volume-down', 'fa-volume-mute', 'fa-volume-off');
-        if (muted || volume === 0) {
-            musicVolumeIcon.classList.add('fa-volume-off');
-        } else if (volume < 0.01) {
-            musicVolumeIcon.classList.add('fa-volume-mute');
-        } else if (volume < 0.5) {
-            musicVolumeIcon.classList.add('fa-volume-down');
-        } else {
-            musicVolumeIcon.classList.add('fa-volume-up');
-        }
-    }
+    // No es necesario updateVolumeIconDisplay aquí, videoPlayerManager.handleVolumeChange lo hará.
 
     let globalUserInteractionHasOccurred = false;
     function handleGlobalUserInteractionForAudioContext() {
@@ -311,19 +310,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const contentWrapper = document.querySelector('.content-wrapper');
     const toggleMainContentBtn = document.getElementById('toggle-main-content-btn');
-    const toggleIcon = toggleMainContentBtn ? toggleMainContentBtn.querySelector('i') : null;
+    const toggleMainContentIcon = toggleMainContentBtn ? toggleMainContentBtn.querySelector('i') : null;
 
-    if (toggleMainContentBtn && contentWrapper && toggleIcon) {
+    if (toggleMainContentBtn && contentWrapper && toggleMainContentIcon) {
         toggleMainContentBtn.addEventListener('click', () => {
             playClickSound();
             contentWrapper.classList.toggle('hidden-by-toggle');
             if (contentWrapper.classList.contains('hidden-by-toggle')) {
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
+                toggleMainContentIcon.classList.remove('fa-eye');
+                toggleMainContentIcon.classList.add('fa-eye-slash');
                 toggleMainContentBtn.title = "Mostrar Contenido";
             } else {
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+                toggleMainContentIcon.classList.remove('fa-eye-slash');
+                toggleMainContentIcon.classList.add('fa-eye');
                 toggleMainContentBtn.title = "Ocultar Contenido";
             }
         });
@@ -331,5 +330,31 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Botón para ocultar contenido o contentWrapper no encontrado.");
     }
 
-});
+    // --- NUEVA LÓGICA PARA EL BOTÓN DE COLAPSAR REPRODUCTOR ---
+    if (togglePlayerBarBtn && musicPlayerBarDOM && togglePlayerBarIcon) {
+        togglePlayerBarBtn.addEventListener('click', () => {
+            playClickSound();
+            handleGlobalUserInteractionForAudioContext(); // Buena práctica si interactúa con audio
 
+            const isCurrentlyHidden = musicPlayerBarDOM.classList.contains('collapsed-by-button');
+
+            musicPlayerBarDOM.classList.toggle('collapsed-by-button');
+            togglePlayerBarBtn.classList.toggle('player-hidden');
+
+            if (isCurrentlyHidden) { // Si estaba oculto, ahora se muestra
+                togglePlayerBarIcon.classList.remove('fa-chevron-down');
+                togglePlayerBarIcon.classList.add('fa-chevron-up');
+                togglePlayerBarBtn.title = "Ocultar Reproductor";
+                contentWrapper.style.paddingTop = "85px"; // Restaurar padding si es necesario
+            } else { // Si estaba visible, ahora se oculta
+                togglePlayerBarIcon.classList.remove('fa-chevron-up');
+                togglePlayerBarIcon.classList.add('fa-chevron-down');
+                togglePlayerBarBtn.title = "Mostrar Reproductor";
+                contentWrapper.style.paddingTop = "15px"; // Reducir padding cuando la barra está oculta
+            }
+        });
+    } else {
+        console.warn("Botón para colapsar reproductor, la barra de música o su ícono no encontrado(s).");
+    }
+
+});

@@ -1,3 +1,4 @@
+/* --- Global Styles --- */
 
 :root {
     --theme-bg-page: #0a0a0a;
@@ -12,6 +13,7 @@
     --theme-border-subtle: #282828;
     --font-primary: "Open Sans", sans-serif;
     --transition-speed: 0.25s;
+    --player-bar-height: 70px; /* Variable para la altura de la barra */
 }
 
 html { height: 100%; }
@@ -62,12 +64,12 @@ body {
     display: block;
 }
 
-#music-control {
+#music-control { /* Este es el botón de mute global, lo mantendremos por si acaso */
     position: fixed; top: 20px; left: 20px; font-size: 1.4em;
     color: var(--theme-text-on-dark);
     background-color: rgba(0,0,0,0.5);
     padding: 7px 9px; border-radius: 50%;
-    z-index: 1010; /* Encima de todo */
+    z-index: 1010;
     transition: color var(--transition-speed), background-color var(--transition-speed), transform 0.2s;
     border: 1px solid var(--theme-border-strong);
     cursor: pointer;
@@ -85,10 +87,11 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
 .content-wrapper {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
-    position: relative; z-index: 10; /* Encima del visualizador y video */
+    position: relative; z-index: 10;
     transform: scale(1.4);
     transform-origin: center center;
-    padding-top: 85px;
+    padding-top: 85px; /* Espacio para la barra del reproductor + un poco más */
+    transition: padding-top var(--transition-speed) ease-out; /* Para ajustar cuando se oculta la barra */
 }
 
 .main-container {
@@ -97,7 +100,7 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     box-shadow: 0 8px 25px rgba(0,0,0,0.35);
     text-align: center; max-width: 580px; width: 100%;
     border: 1px solid var(--theme-border-strong); margin-bottom: 30px;
-    position: relative; z-index: 1; /* Relativo a content-wrapper */
+    position: relative; z-index: 1;
 }
 
 .profile-picture-placeholder {
@@ -143,7 +146,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     background-color: var(--theme-modal-surface); color: var(--theme-text-on-dark);
     border: 1px solid var(--theme-border-strong); border-radius: 8px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    z-index: 1000; /* Encima de la barra del reproductor */
+    z-index: 1000;
     min-width: 300px; width: clamp(320px, 60%, 750px); max-height: 85vh;
     transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
     display: flex; flex-direction: column; overflow: hidden;
@@ -312,7 +315,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     top: 0;
     left: 0;
     width: 100%;
-    height: 70px;
+    height: var(--player-bar-height);
     background-color: #111111;
     color: var(--theme-text-on-dark);
     display: flex;
@@ -320,43 +323,48 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     justify-content: space-between;
     padding: 0 15px;
     box-sizing: border-box;
-    z-index: 950; /* Encima del visualizador y video, debajo de modales */
+    z-index: 950;
     border-bottom: 1px solid var(--theme-border-strong);
-    visibility: hidden;
+    visibility: hidden; /* Inicialmente oculta hasta que JS la muestre */
     opacity: 0;
     transform: translateY(-100%);
     transition: visibility 0s linear 0.3s, opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
-#music-player-bar.ready {
+#music-player-bar.ready { /* Cuando JS la prepara */
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
     transition-delay: 0s;
 }
 
+/* NUEVA CLASE PARA OCULTAR LA BARRA CON EL BOTÓN */
+#music-player-bar.collapsed-by-button {
+    transform: translateY(calc(-1 * var(--player-bar-height) - 1px)); /* -1px por el borde */
+    opacity: 0;
+    visibility: hidden; /* Para que no interfiera con clics */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0s linear 0.3s;
+}
+
+
 #player-album-art-container {
     flex-shrink: 0;
-    position: relative; /* Para posicionar el spinner absolutamente */
-    width: 48px; /* Asegurar que el contenedor tenga dimensiones fijas */
+    position: relative;
+    width: 48px;
     height: 48px;
-    display: flex; /* Para centrar el spinner si es necesario */
+    display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .player-loading-spinner-style {
-    /* position: absolute; Ya no es necesario si es el único hijo visible */
-    /* top: 50%; */
-    /* left: 50%; */
-    /* transform: translate(-50%, -50%); */
-    width: 28px; /* Tamaño del spinner */
+    width: 28px;
     height: 28px;
-    border: 3px solid rgba(255, 255, 255, 0.2); /* Color base del círculo */
-    border-top-color: var(--theme-accent-primary); /* Color de la parte que gira */
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--theme-accent-primary);
     border-radius: 50%;
     animation: playerSpinAnimation 0.8s linear infinite;
-    z-index: 5; /* Encima de la imagen del álbum si se solapan */
+    z-index: 5;
 }
 
 @keyframes playerSpinAnimation {
@@ -365,14 +373,13 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     }
 }
 
-
 #player-album-art-img {
     width: 48px;
     height: 48px;
     object-fit: cover;
     border-radius: 4px;
     display: block;
-    position: absolute; /* Para que el spinner pueda estar en el mismo lugar */
+    position: absolute;
     top: 0;
     left: 0;
 }
@@ -381,7 +388,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     flex: 0 1 200px;
     min-width: 100px;
     overflow: hidden;
-    margin-left: 10px; /* Ajuste para dar espacio si el spinner está en el contenedor de album art */
+    margin-left: 10px;
     margin-right: 10px;
 }
 
@@ -430,7 +437,6 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #player-controls button#player-play-pause-btn i {
     display: block;
 }
-
 
 #player-progress-container {
     display: flex;
@@ -493,7 +499,6 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     background: var(--theme-accent-primary);
 }
 
-
 #player-volume-controls {
     display: flex;
     align-items: center;
@@ -554,13 +559,57 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
   background: var(--theme-accent-primary);
 }
 
+/* --- Botón para colapsar/expandir reproductor --- */
+#toggle-player-bar-btn {
+    position: fixed;
+    top: calc(var(--player-bar-height) - 10px); /* Ligeramente solapado sobre la barra o justo debajo */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px; /* Ancho del botón */
+    height: 20px; /* Alto del botón, para que sea como una pestaña */
+    background-color: #222; /* Un poco más oscuro que la barra */
+    color: var(--theme-text-on-dark);
+    border: 1px solid var(--theme-border-strong);
+    border-top: none; /* Sin borde superior para que se fusione */
+    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
+    font-size: 0.9em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 951; /* Encima de la barra del reproductor */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color var(--transition-speed), transform 0.3s ease-out, top 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 0; /* Inicialmente oculto hasta que musicPlayerBarDOM sea 'ready' */
+    visibility: hidden;
+}
+
+#toggle-player-bar-btn.ready { /* Cuando JS lo prepara junto con la barra */
+    opacity: 1;
+    visibility: visible;
+}
+
+#toggle-player-bar-btn:hover {
+    background-color: #333;
+}
+
+#toggle-player-bar-btn.player-hidden {
+    top: -1px; /* Para que "asome" desde arriba cuando la barra está oculta */
+    border-top: 1px solid var(--theme-border-strong); /* Mostrar borde superior */
+    border-bottom: none;
+    border-radius: 0 0 8px 8px; /* Mantener redondeo inferior o ajustar si se prefiere */
+    /* Podríamos cambiar el color de fondo si se desea */
+}
+
+
+/* --- Botón para ocultar contenido principal --- */
 #toggle-main-content-btn {
     position: fixed;
     bottom: 20px;
     right: 20px;
     width: 50px;
     height: 50px;
-    background-color: var(--theme-header-bg); /* O un color que prefieras */
+    background-color: var(--theme-header-bg);
     color: var(--theme-accent-primary);
     border: 1px solid var(--theme-border-strong);
     border-radius: 50%;
@@ -569,7 +618,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 990; /* Debajo de los modales (1000+) pero encima de la mayoría del contenido */
+    z-index: 990;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: background-color var(--transition-speed), transform 0.2s;
 }
@@ -579,10 +628,9 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     transform: scale(1.1);
 }
 
-/* Clase para ocultar el .content-wrapper */
 .content-wrapper.hidden-by-toggle {
     opacity: 0;
     visibility: hidden;
-    transform: scale(0.8) translateY(20px); /* Efecto de desaparición opcional */
+    transform: scale(0.8) translateY(20px);
     transition: opacity 0.3s ease-out, visibility 0s linear 0.3s, transform 0.3s ease-out;
 }

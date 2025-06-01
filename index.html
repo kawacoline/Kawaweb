@@ -19,7 +19,7 @@
     <div id="music-player-bar">
         <div id="player-album-art-container">
             <img id="player-album-art-img" src="assets/SONGS_COVERS/default_art.png" alt="Album Art">
-            <div id="player-loading-spinner" class="player-loading-spinner-style" style="display: none;"></div> <!-- NUEVO SPINNER -->
+            <div id="player-loading-spinner" class="player-loading-spinner-style" style="display: none;"></div>
         </div>
         <div id="player-track-info">
             <div id="player-song-title">Song Title</div>
@@ -32,7 +32,7 @@
         </div>
         <div id="player-progress-container">
             <span id="player-current-time">0:00</span>
-            <input type="range" id="player-progress-bar" value="0" min="0" step="0.1"> <!-- max se seteará dinámicamente -->
+            <input type="range" id="player-progress-bar" value="0" min="0" step="0.1">
             <span id="player-total-time">0:00</span>
         </div>
         <div id="player-volume-controls">
@@ -41,9 +41,14 @@
         </div>
     </div>
 
+    <!-- NUEVO BOTÓN PARA COLAPSAR/EXPANDIR EL REPRODUCTOR -->
+    <button id="toggle-player-bar-btn" title="Ocultar Reproductor">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
     <!-- Video Player (fuente de audio y video) -->
     <div id="background-video-container">
-       <video id="background-video-player" preload="metadata" crossorigin="anonymous"></video> <!-- muted y loop se manejan en JS -->
+       <video id="background-video-player" preload="metadata" crossorigin="anonymous"></video>
     </div>
 
     <!-- p5.js Visualizer Canvas -->
@@ -148,7 +153,7 @@
         </div>
     </div>
 
-    <!-- BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR CONTENIDO -->
+    <!-- BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR CONTENIDO PRINCIPAL -->
     <button id="toggle-main-content-btn" title="Mostrar/Ocultar Contenido">
         <i class="fas fa-eye"></i>
     </button>
