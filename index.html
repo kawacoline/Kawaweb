@@ -1,16 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kawacoline - Portfolio</title>
+    <title>Kawacoline/im</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- p5.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/addons/p5.sound.min.js"></script>
 </head>
 <body>
@@ -18,6 +19,7 @@
     <div id="music-player-bar">
         <div id="player-album-art-container">
             <img id="player-album-art-img" src="assets/SONGS_COVERS/default_art.png" alt="Album Art">
+            <div id="player-loading-spinner" class="player-loading-spinner-style" style="display: none;"></div> <!-- NUEVO SPINNER -->
         </div>
         <div id="player-track-info">
             <div id="player-song-title">Song Title</div>
@@ -55,7 +57,7 @@
 
             <div class="intro-section">
                 <h1>Kawacoline</h1>
-                <p>Aegleseeker</p>
+                <p>I'm Kawa</p>
             </div>
 
             <div class="icon-sections">
@@ -95,7 +97,7 @@
         <div class="modal-header"><span class="modal-title">About Me</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
         <div class="modal-content">
             <h2>Kawa</h2>
-            <p>Hi, I'm Acetylcholine a.k.a Kawacoline</p>
+            <p>Hi, I'm Kawacoline a.k.a Acetylcholine</p>
             <img src="https://i.pinimg.com/736x/42/8c/04/428c04bddfe8ebedd09f4adda8a798f2.jpg" alt="Imagen sobre mí" class="modal-img">
         </div>
     </div>
@@ -133,7 +135,7 @@
             </details>
         </div>
     </div>
-    
+
     <div id="contact-modal" class="modal">
         <div class="modal-header"><span class="modal-title">Contact</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
         <div class="modal-content">
@@ -152,7 +154,7 @@
     </button>
 
     <audio id="clickSound" src="assets/click.mp3" preload="auto"></audio>
-    
+
     <script src="videoPlayerManager.js"></script>
     <script src="audioVisualizer.js"></script>
     <script src="script.js"></script>

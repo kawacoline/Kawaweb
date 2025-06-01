@@ -1,5 +1,3 @@
-// script.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const iconItems = document.querySelectorAll('.icon-item');
     const modals = document.querySelectorAll('.modal');
@@ -8,27 +6,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerPrevBtn = document.getElementById('player-prev-btn');
     const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
     const playerNextBtn = document.getElementById('player-next-btn');
-    const playerProgressBar = document.getElementById('player-progress-bar'); 
+    const playerProgressBar = document.getElementById('player-progress-bar');
     const volumeSlider = document.getElementById('volume-slider');
     const musicVolumeIcon = document.getElementById('music-volume-icon');
-
-
     const playlistData = [
-        { title: "駿", artist: "Nhelv / Silentroom", 
-          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396118/xtlnbonlqhgycnfgluhj.webm", 
-          albumArtPath: "assets/SONGS_COVERS/駿_cover.jpg" },
-        { title: "Rainshower", artist: "Silentroom × Shun", 
-          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396759/%E9%A9%9F%E9%9B%A8%E3%81%AE%E7%8B%AD%E9%96%93_Rainshower_Silentroom_Shun_720p_tmtjhf.webm", 
-          albumArtPath: "assets/SONGS_COVERS/rainshowe_cover.jpeg" },
-        { title: "Aegleseeker", artist: "Silentroom vs Frums", 
-          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748395211/d3snqsjythwmwnszdpe0.mp4", 
-          albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg" },
-        { title: "World execute (me)", artist: "Mili", 
-          filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748323206/ybejaiedxaryhcbko9ms.webm", 
-          albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg" }
+        {
+            title: "Sonar", artist: "Renaud Hallee",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748807195/Sonar_r78tja.mp4",
+            albumArtPath: "assets/SONGS_COVERS/Sonar.jpeg"
+        },
+        {
+            title: "駿", artist: "Nhelv / Silentroom",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396118/xtlnbonlqhgycnfgluhj.webm",
+            albumArtPath: "assets/SONGS_COVERS/駿_cover.jpg"
+        },
+        {
+            title: "nostalmic", artist: "いっしん/just usual imagination by Hercelot",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748806936/%E3%83%A2%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9_nostalmic_pd5bh0.webm",
+            albumArtPath: "assets/SONGS_COVERS/nostalmic.jpeg"
+        },
+        {
+            title: "Rainshower", artist: "Silentroom × Shun",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396759/%E9%A9%9F%E9%9B%A8%E3%81%AE%E7%8B%AD%E9%96%93_Rainshower_Silentroom_Shun_720p_tmtjhf.webm",
+            albumArtPath: "assets/SONGS_COVERS/rainshowe_cover.jpeg"
+        },
+        {
+            title: "Disengaging", artist: "katagiri/kkmfd - 脱社会ヴァンダリズム独白if",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748805972/Disengaging_fwzokn.webm",
+            albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg"
+        },
+        {
+            title: "World execute (me)", artist: "Mili",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748323206/ybejaiedxaryhcbko9ms.webm",
+            albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg"
+        }
     ];
 
-new p5(audioVisualizer.sketch); 
+    new p5(audioVisualizer.sketch);
 
     function checkP5SystemReadyAndInitPlayer() {
         let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance;
@@ -46,12 +60,12 @@ new p5(audioVisualizer.sketch);
                 musicPlayerBarDOM.classList.add('ready');
                 console.log("Script.js: Barra de reproductor activada.");
             } else if (musicPlayerBarDOM) {
-                 musicPlayerBarDOM.classList.remove('ready');
-                 console.warn("Script.js: No se activa la barra del reproductor.");
+                musicPlayerBarDOM.classList.remove('ready');
+                console.warn("Script.js: No se activa la barra del reproductor.");
             }
         } else {
             console.log(`Script.js: Waiting for p5 sketch (audioVisualizer.p5SetupDone && p5Instance) to be ready...`);
-            setTimeout(checkP5SystemReadyAndInitPlayer, 100); 
+            setTimeout(checkP5SystemReadyAndInitPlayer, 100);
         }
     }
     checkP5SystemReadyAndInitPlayer();
@@ -59,18 +73,18 @@ new p5(audioVisualizer.sketch);
     // --- Lógica de UI (Modales, etc.) ---
     let modalBaseZIndex = 1000;
     const modalStates = new Map();
-    const workData = [ 
+    const workData = [
         { type: 'banner', text: 'ффф <a href="mailto:kawacoline@gmail.com">work email</a>. ффф I do illustration, animation, web design, and web/app development. :)' },
-        { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma']},
-        { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js']},
-        { type: 'videos', title: 'ANIMATIONS', items: [ { title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: '黒桃の触手 Battle Collaboration 紅桃の鉄腹 (by 夕䪯)', youtubeId: 'PBfBxPBUdhg' }, { title: 'WEAPON MASTER 2', youtubeId: '20a4iQucxWM' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' } ]},
-        { type: 'gallery', title: 'ILLUSTRATION', items: [ 'https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://i.imgur.com/Xo9eszl.jpeg', ]},
-        { type: 'devProjects', title: 'PROJECTS', items: [ { title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>N/A!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", } ]},
-        { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>."}
+        { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma'] },
+        { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js'] },
+        { type: 'videos', title: 'ANIMATIONS', items: [{ title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: 'Thrilling Zümrütrüyası【Arknights R.A. anim】', youtubeId: '3kZD1oNxLA0' }, { title: 'EXC3_CM3', youtubeId: 'o1hggJOIY_c' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' }] },
+        { type: 'gallery', title: 'ILLUSTRATION', items: ['https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://i.imgur.com/Xo9eszl.jpeg',] },
+        { type: 'devProjects', title: 'PROJECTS', items: [{ title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>N/A!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", }] },
+        { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>." }
     ];
 
-    function renderWorkSection(contentElement) { 
-        contentElement.innerHTML = ''; 
+    function renderWorkSection(contentElement) {
+        contentElement.innerHTML = '';
         workData.forEach(section => {
             const sectionDiv = document.createElement('div'); sectionDiv.className = 'work-section';
             if (section.title && section.type !== 'banner' && section.type !== 'footerText') { const titleEl = document.createElement('h3'); titleEl.textContent = section.title; sectionDiv.appendChild(titleEl); }
@@ -85,112 +99,112 @@ new p5(audioVisualizer.sketch);
             if (section.type !== 'banner' && section.type !== 'footerText') { contentElement.appendChild(sectionDiv); }
         });
     }
-    modals.forEach(modal => { 
+    modals.forEach(modal => {
         modalStates.set(modal, {
             isOpen: false, isMaximized: false, isMinimized: false,
-            original: { left: '50%', top: '50%', width: getComputedStyle(modal).width, transform: 'translate(-50%, -50%) scale(0.9)' }, 
-            current: {} 
+            original: { left: '50%', top: '50%', width: getComputedStyle(modal).width, transform: 'translate(-50%, -50%) scale(0.9)' },
+            current: {}
         });
     });
-    iconItems.forEach(item => { 
+    iconItems.forEach(item => {
         item.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            playClickSound(); 
-            handleGlobalUserInteractionForAudioContext(); 
-            const modalId = item.dataset.modalTarget; 
-            const targetModal = document.querySelector(modalId); 
-            if (targetModal) openModal(targetModal); 
+            e.stopPropagation();
+            playClickSound();
+            handleGlobalUserInteractionForAudioContext();
+            const modalId = item.dataset.modalTarget;
+            const targetModal = document.querySelector(modalId);
+            if (targetModal) openModal(targetModal);
         });
     });
-    function openModal(modal) { 
-        const state = modalStates.get(modal); 
-        modalBaseZIndex++; 
+    function openModal(modal) {
+        const state = modalStates.get(modal);
+        modalBaseZIndex++;
         modal.style.zIndex = modalBaseZIndex;
-        modal.classList.remove('minimized', 'maximized'); 
-        Object.assign(modal.style, state.original); 
+        modal.classList.remove('minimized', 'maximized');
+        Object.assign(modal.style, state.original);
         if (modal.id === 'work-modal') {
-          const contentElement = modal.querySelector('.modal-content');
-          if (contentElement && (contentElement.innerHTML.trim() === '' || contentElement.querySelector('.loading-placeholder'))) {
-            renderWorkSection(contentElement);
-          }
+            const contentElement = modal.querySelector('.modal-content');
+            if (contentElement && (contentElement.innerHTML.trim() === '' || contentElement.querySelector('.loading-placeholder'))) {
+                renderWorkSection(contentElement);
+            }
         }
-        void modal.offsetWidth; 
-        modal.classList.add('active'); 
-        modal.style.transform = 'translate(-50%, -50%) scale(1)'; 
+        void modal.offsetWidth;
+        modal.classList.add('active');
+        modal.style.transform = 'translate(-50%, -50%) scale(1)';
         Object.assign(state, { isOpen: true, isMinimized: false, isMaximized: false, current: { left: '50%', top: '50%', width: state.original.width, transform: 'translate(-50%, -50%) scale(1)' } });
     }
     function handleModalButtonInteraction(e) { if (e) e.stopPropagation(); playClickSound(); }
-    modals.forEach(modal => { 
+    modals.forEach(modal => {
         const state = modalStates.get(modal);
         const closeBtn = modal.querySelector('.close-btn');
         const minimizeBtn = modal.querySelector('.minimize-btn');
         const maximizeBtn = modal.querySelector('.maximize-btn');
-        if (closeBtn) { 
+        if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); const wasMinimized = state.isMinimized;
-                modal.classList.remove('active', 'minimized', 'maximized'); 
-                Object.assign(modal.style, state.original, { '--minimized-left': null }); 
-                modal.style.removeProperty('--minimized-left'); 
-                Object.assign(state, { isOpen: false, isMaximized: false, isMinimized: false, minimizedOffset: undefined }); 
-                if (wasMinimized) recalculateMinimizedOffsets(); 
+                modal.classList.remove('active', 'minimized', 'maximized');
+                Object.assign(modal.style, state.original, { '--minimized-left': null });
+                modal.style.removeProperty('--minimized-left');
+                Object.assign(state, { isOpen: false, isMaximized: false, isMinimized: false, minimizedOffset: undefined });
+                if (wasMinimized) recalculateMinimizedOffsets();
             });
         }
-        if (minimizeBtn) { 
+        if (minimizeBtn) {
             minimizeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); modalBaseZIndex++; modal.style.zIndex = modalBaseZIndex;
-                if (!state.isMinimized) { 
-                    if (!state.isMaximized) state.current = { left: modal.style.left, top: modal.style.top, width: modal.style.width, transform: modal.style.transform }; 
+                if (!state.isMinimized) {
+                    if (!state.isMaximized) state.current = { left: modal.style.left, top: modal.style.top, width: modal.style.width, transform: modal.style.transform };
                     modal.classList.add('minimized'); modal.classList.remove('maximized', 'active');
-                    let calculatedLeftOffset = baseMinimizedInitialOffset; 
+                    let calculatedLeftOffset = baseMinimizedInitialOffset;
                     document.querySelectorAll('.modal.minimized').forEach(m => {
                         if (m !== modal) { const otherState = modalStates.get(m); if (otherState && otherState.minimizedOffset !== undefined) calculatedLeftOffset = Math.max(calculatedLeftOffset, otherState.minimizedOffset + minimizedWindowWidth + minimizedWindowSpacing); }
                     });
-                    modal.style.setProperty('--minimized-left', `${calculatedLeftOffset}px`); 
-                    Object.assign(state, { minimizedOffset: calculatedLeftOffset, isMinimized: true, isMaximized: false }); 
-                } else { 
+                    modal.style.setProperty('--minimized-left', `${calculatedLeftOffset}px`);
+                    Object.assign(state, { minimizedOffset: calculatedLeftOffset, isMinimized: true, isMaximized: false });
+                } else {
                     modal.classList.remove('minimized'); modal.classList.add('active');
                     state.minimizedOffset = undefined; modal.style.removeProperty('--minimized-left'); recalculateMinimizedOffsets();
                     const restoreState = (state.current && state.current.left && state.current.left !== '50%') ? state.current : { left: '50%', top: '50%', width: state.original.width, transform: 'translate(-50%, -50%) scale(1)' };
-                    Object.assign(modal.style, restoreState, { bottom: 'auto' }); 
-                    state.isMinimized = false; 
+                    Object.assign(modal.style, restoreState, { bottom: 'auto' });
+                    state.isMinimized = false;
                 }
             });
         }
-        if (maximizeBtn) { 
+        if (maximizeBtn) {
             maximizeBtn.addEventListener('click', (e) => {
                 handleModalButtonInteraction(e); modalBaseZIndex++; modal.style.zIndex = modalBaseZIndex;
-                if (!state.isMaximized) { 
+                if (!state.isMaximized) {
                     const wasMinimized = state.isMinimized;
                     if (wasMinimized) { state.minimizedOffset = undefined; modal.style.removeProperty('--minimized-left'); }
-                    else if (state.isOpen) state.current = { left: modal.style.left, top: modal.style.top, width: modal.style.width, transform: modal.style.transform }; 
+                    else if (state.isOpen) state.current = { left: modal.style.left, top: modal.style.top, width: modal.style.width, transform: modal.style.transform };
                     modal.classList.add('maximized', 'active'); modal.classList.remove('minimized');
-                    modal.style.bottom = 'auto'; 
-                    Object.assign(state, { isMaximized: true, isMinimized: false }); 
+                    modal.style.bottom = 'auto';
+                    Object.assign(state, { isMaximized: true, isMinimized: false });
                     if (wasMinimized) recalculateMinimizedOffsets();
-                } else { 
+                } else {
                     modal.classList.remove('maximized');
                     const restoreState = (state.current && state.current.left && state.current.left !== '50%') ? state.current : { left: '50%', top: '50%', width: state.original.width, transform: 'translate(-50%, -50%) scale(1)' };
-                    Object.assign(modal.style, restoreState, { bottom: 'auto' }); 
+                    Object.assign(modal.style, restoreState, { bottom: 'auto' });
                     if (!state.isMinimized) modal.classList.add('active');
-                    state.isMaximized = false; 
+                    state.isMaximized = false;
                 }
             });
         }
         const header = modal.querySelector('.modal-header');
         if (header) makeDraggable(modal, header, state);
     });
-    function makeDraggable(element, handle, state) { 
+    function makeDraggable(element, handle, state) {
         let mouseXStart, mouseYStart, elementXStart, elementYStart, isDragging = false;
         handle.addEventListener('mousedown', (e) => {
             if (e.button !== 0 || e.target.closest('button') || state.isMaximized || state.isMinimized) return;
             isDragging = true; playClickSound(); modalBaseZIndex++; element.style.zIndex = modalBaseZIndex;
-            const rect = element.getBoundingClientRect(); 
+            const rect = element.getBoundingClientRect();
             elementXStart = rect.left; elementYStart = rect.top;
-            mouseXStart = e.clientX; mouseYStart = e.clientY; 
-            Object.assign(element.style, { left: `${elementXStart}px`, top: `${elementYStart}px`, transform: 'scale(1)' }); 
-            element.classList.add('dragging'); 
-            document.addEventListener('mousemove', onMouseMove); 
-            document.addEventListener('mouseup', onMouseUp);   
+            mouseXStart = e.clientX; mouseYStart = e.clientY;
+            Object.assign(element.style, { left: `${elementXStart}px`, top: `${elementYStart}px`, transform: 'scale(1)' });
+            element.classList.add('dragging');
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
         });
         function onMouseMove(e) {
             if (!isDragging) return;
@@ -199,24 +213,24 @@ new p5(audioVisualizer.sketch);
         }
         function onMouseUp() {
             if (!isDragging) return; isDragging = false; element.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove); 
+            document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             if (!state.isMaximized && !state.isMinimized) Object.assign(state.current, { left: element.style.left, top: element.style.top, transform: 'scale(1)' });
         }
     }
     const baseMinimizedInitialOffset = 15, minimizedWindowSpacing = 10, minimizedWindowWidth = 220;
-    function recalculateMinimizedOffsets() { 
+    function recalculateMinimizedOffsets() {
         let currentOffset = baseMinimizedInitialOffset; const minimized = [];
-        modals.forEach(m => { const s = modalStates.get(m); if (s.isMinimized) minimized.push({modal:m, state:s}); });
-        minimized.sort((a,b) => (a.state.minimizedOffset || baseMinimizedInitialOffset) - (b.state.minimizedOffset || baseMinimizedInitialOffset));
+        modals.forEach(m => { const s = modalStates.get(m); if (s.isMinimized) minimized.push({ modal: m, state: s }); });
+        minimized.sort((a, b) => (a.state.minimizedOffset || baseMinimizedInitialOffset) - (b.state.minimizedOffset || baseMinimizedInitialOffset));
         minimized.forEach(item => { item.modal.style.setProperty('--minimized-left', `${currentOffset}px`); item.state.minimizedOffset = currentOffset; currentOffset += minimizedWindowWidth + minimizedWindowSpacing; });
     }
-     function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
+    function playClickSound() { if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e => console.warn("Error sonido de clic:", e)); } }
 
     if (playerPlayPauseBtn) { playerPlayPauseBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.togglePlayPause(); }); }
     if (playerNextBtn) { playerNextBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.playNextSong(); }); }
     if (playerPrevBtn) { playerPrevBtn.addEventListener('click', () => { playClickSound(); handleGlobalUserInteractionForAudioContext(); videoPlayerManager.playPrevSong(); }); }
-    
+
     if (playerProgressBar) {
         playerProgressBar.addEventListener('input', (e) => {
             videoPlayerManager.isUserDraggingProgressBar = true;
@@ -301,7 +315,7 @@ new p5(audioVisualizer.sketch);
 
     if (toggleMainContentBtn && contentWrapper && toggleIcon) {
         toggleMainContentBtn.addEventListener('click', () => {
-            playClickSound(); 
+            playClickSound();
             contentWrapper.classList.toggle('hidden-by-toggle');
             if (contentWrapper.classList.contains('hidden-by-toggle')) {
                 toggleIcon.classList.remove('fa-eye');
@@ -316,6 +330,6 @@ new p5(audioVisualizer.sketch);
     } else {
         console.warn("Botón para ocultar contenido o contentWrapper no encontrado.");
     }
-    
+
 });
 
