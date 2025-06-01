@@ -152,7 +152,7 @@ const audioVisualizer = {
             if (wave && wave.length > 0) {
                 p.push(); // Nuevo contexto de dibujo para las líneas
                 p.stroke(255, 255, 255, 170); // Color de las líneas, un poco más tenues
-                p.strokeWeight(1.5);          // Grosor de las líneas
+                p.strokeWeight(2.5);          // Grosor de las líneas
                 p.noFill();
 
                 const lineMarginXRatio = 0.07;  // 7% desde los bordes laterales
@@ -216,7 +216,7 @@ const audioVisualizer = {
 
         // Clase Particle (sin cambios)
         class Particle {
-            constructor(pInstance) { this.p = pInstance; this.pos = this.p.createVector(0,0); this.vel = p5.Vector.random2D().mult(this.p.random(0.5,2)); this.acc = p5.Vector.random2D().mult(this.p.random(0.005,0.02)); this.w = this.p.random(1.5,4); this.color = [this.p.random(200,255),this.p.random(200,255),this.p.random(200,255),this.p.random(80,180)]; this.lifespan = 200; }
+            constructor(pInstance) { this.p = pInstance; this.pos = this.p.createVector(0,0); this.vel = p5.Vector.random2D().mult(this.p.random(0.5,2)); this.acc = p5.Vector.random2D().mult(this.p.random(0.005,0.02)); this.w = this.p.random(1.5,4); this.color = [this.p.random(200,255),this.p.random(200,255),this.p.random(200,255),this.p.random(80,180)]; this.lifespan = 300; }
             update(bassKicked) { this.vel.add(this.acc); this.pos.add(this.vel); if(bassKicked) { let push = this.pos.copy().normalize().mult(this.p.random(0.5,1.5)); this.vel.add(push); } this.vel.limit(3); this.lifespan -= 1.5; }
             edges() { return this.p && this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.75 || this.lifespan < 0; }
             show() { if(this.p) {this.p.noStroke(); this.p.fill(this.color[0],this.color[1],this.color[2],this.lifespan); this.p.ellipse(this.pos.x,this.pos.y,this.w);} }
