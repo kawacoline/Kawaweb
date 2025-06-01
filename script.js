@@ -1,20 +1,22 @@
-
+// --- DOMContentLoaded: Aquí empieza todo el desmadre ---
 document.addEventListener('DOMContentLoaded', () => {
-    const iconItems = document.querySelectorAll('.icon-item');
-    const modals = document.querySelectorAll('.modal');
-    const clickSound = document.getElementById('clickSound');
-    const musicPlayerBarDOM = document.getElementById('music-player-bar');
-    const playerPrevBtn = document.getElementById('player-prev-btn');
-    const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
-    const playerNextBtn = document.getElementById('player-next-btn');
-    const playerProgressBar = document.getElementById('player-progress-bar');
-    const volumeSlider = document.getElementById('volume-slider');
-    const musicVolumeIcon = document.getElementById('music-volume-icon');
+    // --- Selección de elementos del DOM ---
+    const iconItems = document.querySelectorAll('.icon-item'); // Icons
+    const modals = document.querySelectorAll('.modal'); // Modales
+    const clickSound = document.getElementById('clickSound'); // Sonido de clic, bajarle volumen a esta mierda
+    const musicPlayerBarDOM = document.getElementById('music-player-bar'); // Barra del reproductor
+    const playerPrevBtn = document.getElementById('player-prev-btn'); // Botón para canción anterior
+    const playerPlayPauseBtn = document.getElementById('player-play-pause-btn'); // Botón play/pause
+    const playerNextBtn = document.getElementById('player-next-btn'); // Botón para siguiente canción
+    const playerProgressBar = document.getElementById('player-progress-bar'); // Barra de progreso
+    const volumeSlider = document.getElementById('volume-slider'); // Slider de volumen
+    const musicVolumeIcon = document.getElementById('music-volume-icon'); // Ícono de volumen
 
     // NUEVO: Referencia al botón de colapsar reproductor
-    const togglePlayerBarBtn = document.getElementById('toggle-player-bar-btn');
-    const togglePlayerBarIcon = togglePlayerBarBtn ? togglePlayerBarBtn.querySelector('i') : null;
+    const togglePlayerBarBtn = document.getElementById('toggle-player-bar-btn'); // Botón para colapsar la barra del reproductor
+    const togglePlayerBarIcon = togglePlayerBarBtn ? togglePlayerBarBtn.querySelector('i') : null; // Ícono dentro del botón
 
+    // --- Playlist: Datos de las canciones ---
     const playlistData = [
         {
             title: "Sonar", artist: "Renaud Hallee",
@@ -48,10 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
-    new p5(audioVisualizer.sketch);
+    // --- Inicialización de p5.js para el visualizador de audio ---
+    new p5(audioVisualizer.sketch); // Dolor de cabeza, pero es necesario para que p5.js funcione correctamente
 
+    // --- Función para inicializar el reproductor cuando p5 esté listo ---
     function checkP5SystemReadyAndInitPlayer() {
-        let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance;
+        let p5CoreAndSketchSetupDone = audioVisualizer.p5SetupDone && audioVisualizer.p5Instance; // Verificar si p5.js y el sketch están listos
 
         if (p5CoreAndSketchSetupDone) {
             console.log("Script.js: Sketch de p5 (audioVisualizer) está listo. Inicializando Video Player Manager.");
@@ -72,26 +76,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             console.log(`Script.js: Waiting for p5 sketch (audioVisualizer.p5SetupDone && p5Instance) to be ready...`);
-            setTimeout(checkP5SystemReadyAndInitPlayer, 100);
+            setTimeout(checkP5SystemReadyAndInitPlayer, 100); // debería ser más corto, pero no quiero que se rompa si p5.js tarda más en inicializarse
         }
     }
     checkP5SystemReadyAndInitPlayer();
 
     // --- Lógica de UI (Modales, etc.) ---
-    let modalBaseZIndex = 1000;
-    const modalStates = new Map();
+    let modalBaseZIndex = 1000; // Base para el z-index de los modales
+    const modalStates = new Map(); // Map para flexibilidad a la hora manejar estados de modales.
     const workData = [
         { type: 'banner', text: 'ффф <a href="mailto:kawacoline@gmail.com">work email</a>. ффф I do illustration, animation, web design, and web/app development. :)' },
         { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma'] },
         { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'Gatsby', 'Next.js'] },
         { type: 'videos', title: 'ANIMATIONS', items: [{ title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: 'Thrilling Zümrütrüyası【Arknights R.A. anim】', youtubeId: '3kZD1oNxLA0' }, { title: 'EXC3_CM3', youtubeId: 'o1hggJOIY_c' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' }] },
-        { type: 'gallery', title: 'ILLUSTRATION', items: ['https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://i.imgur.com/Xo9eszl.jpeg',] },
-        { type: 'devProjects', title: 'PROJECTS', items: [{ title: 'фисвуа', image: 'https://via.placeholder.com/120x90/1c1c1c/eeeeee?text=Bingus', description: "фффффффффффффф <a href='#' target='_blank'>N/A!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", }] },
+        { type: 'gallery', title: 'ILLUSTRATION', items: ['https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png',] },
+        { type: 'devProjects', title: 'PROJECTS', items: [{ title: 'фисвуа', image: 'https://pbs.twimg.com/media/GqHVqlzagAAIAuI?format=png&name=small', description: "фффффффффффффф <a href='#' target='_blank'>N/A!</a> фффффффф", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", }] },
         { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>." }
     ];
 
+    // --- Renderizar la sección de trabajo ---
     function renderWorkSection(contentElement) {
-        contentElement.innerHTML = '';
+        contentElement.innerHTML = ''; // Limpiar contenido previo
         workData.forEach(section => {
             const sectionDiv = document.createElement('div'); sectionDiv.className = 'work-section';
             if (section.title && section.type !== 'banner' && section.type !== 'footerText') { const titleEl = document.createElement('h3'); titleEl.textContent = section.title; sectionDiv.appendChild(titleEl); }
