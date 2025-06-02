@@ -57,7 +57,7 @@ const audioVisualizer = {
             console.log("Audio Visualizer: p5 loop stopped.");
             if (this.p5Instance && typeof this.p5Instance.clear === 'function') {
                 try {
-                    this.p5Instance.clear();
+                    this.p5Instance.clear(); // Limpiar el canvas una última vez
                     console.log("Audio Visualizer: Canvas cleared after stopping loop.");
                 } catch (e) {
                     console.warn("Error clearing canvas during disconnect:", e);
@@ -99,7 +99,8 @@ const audioVisualizer = {
 
                 if (p.isLooping() && !audioVisualizer.isDrawing) {
                      p.noLoop();
-                     p.clear();
+                     // No es necesario p.clear() aquí si no se está dibujando activamente.
+                     // Se limpiará al inicio del próximo frame de dibujo si isDrawing vuelve a ser true.
                 }
                 return;
             }
@@ -107,15 +108,20 @@ const audioVisualizer = {
                 p.loop();
             }
 
-            p.clear(); // Limpiar canvas en cada frame
+            p.clear(); // Limpia los dibujos del frame anterior en el canvas p5.
+                       // El canvas en sí es transparente por defecto, mix-blend-mode actuará sobre los píxeles dibujados.
+
+            // No necesitamos p.blendMode(p.DIFFERENCE) aquí, lo maneja CSS.
+            // p.blendMode(p.BLEND); // Asegurarse que p5 dibuja normalmente dentro de su propio canvas.
 
             audioVisualizer.fft.analyze();
-            let wave = audioVisualizer.fft.waveform(); // Esto devuelve valores entre -1 y 1
+            let wave = audioVisualizer.fft.waveform();
             let bassEnergy = audioVisualizer.fft.getEnergy("bass");
 
             // --- Visualización Central Existente (Círculo y Partículas) ---
             p.push();
             p.translate(p.width / 2, p.height / 2);
+
             // Lógica de partículas
             if (bassEnergy > 150 && audioVisualizer.particles.length < 150) {
                 for (let i = 0; i < p.random(0, 2); i++) audioVisualizer.particles.push(new Particle(p));
@@ -128,9 +134,9 @@ const audioVisualizer = {
             }
 
             // Dibujo de la onda circular
-            p.stroke(255, 255, 255, 200);
+            p.stroke(255, 255, 255, 255); // Blanco opaco para el trazo
             p.strokeWeight(2.5);
-            p.noFill();
+            p.noFill(); // Importante para que solo el trazo se mezcle
             const rBase = p.min(p.width, p.height) * 0.25;
             const rRange = p.min(p.width, p.height) * 0.15;
 
@@ -146,18 +152,18 @@ const audioVisualizer = {
                 }
                 p.endShape();
             }
-            p.pop(); // Fin de la visualización central (y su translate)
+            p.pop();
 
             // --- NUEVAS LÍNEAS LATERALES (CUERDAS DE GUITARRA) ---
             if (wave && wave.length > 0) {
-                p.push(); // Nuevo contexto de dibujo para las líneas
-                p.stroke(255, 255, 255, 170); // Color de las líneas, un poco más tenues
-                p.strokeWeight(2.5);          // Grosor de las líneas
-                p.noFill();
+                p.push();
+                p.stroke(255, 255, 255, 255); // Blanco opaco para el trazo
+                p.strokeWeight(2.5);
+                p.noFill(); // Importante
 
-                const lineMarginXRatio = 0.07;  // 7% desde los bordes laterales
-                const lineTopRatio = 0.1;       // 10% desde arriba
-                const lineBottomRatio = 0.9;    // 10% desde abajo (ocupa 80% de la altura)
+                const lineMarginXRatio = 0.07;
+                const lineTopRatio = 0.1;
+                const lineBottomRatio = 0.9;
 
                 const lineXLeft = p.width * lineMarginXRatio;
                 const lineXRight = p.width * (1 - lineMarginXRatio);
@@ -165,61 +171,76 @@ const audioVisualizer = {
                 const lineYEnd = p.height * lineBottomRatio;
                 const lineHeight = lineYEnd - lineYStart;
 
-                const numSegments = 40; // Número de segmentos para dibujar la "cuerda"
+                const numSegments = 40;
                 const segmentLength = lineHeight / numSegments;
-                // Máxima amplitud de la vibración, puede ser un porcentaje del ancho o un valor fijo
-                const maxDisplacement = p.width * 0.02; // 2% del ancho de la pantalla
+                const maxDisplacement = p.width * 0.02;
 
-                // Función para dibujar una cuerda vibrante
                 const drawVibratingLine = (baseX, waveOffset, invertDisplacement = false) => {
                     p.beginShape();
                     for (let i = 0; i <= numSegments; i++) {
                         const currentY = lineYStart + i * segmentLength;
-
-                        // Mapear 'i' (o currentY) a un índice del waveform
-                        // Usaremos una porción del waveform (ej. la primera mitad) y aplicaremos un offset
-                        const portionToSample = wave.length / 2; // Cuántos puntos del waveform usamos
+                        const portionToSample = wave.length / 2;
                         let waveSampleIndex = p.floor(p.map(i, 0, numSegments, 0, portionToSample - 1));
-                        
-                        // Aplicar offset y asegurar ciclicidad dentro de todo el array 'wave'
                         waveSampleIndex = (waveSampleIndex + waveOffset) % wave.length;
                         waveSampleIndex = p.constrain(waveSampleIndex, 0, wave.length - 1);
-
                         const waveValue = wave[waveSampleIndex] || 0;
                         let displacement = p.map(waveValue, -1, 1, -maxDisplacement, maxDisplacement);
-                        
                         if (invertDisplacement) {
                             displacement *= -1;
                         }
-
                         p.vertex(baseX + displacement, currentY);
                     }
                     p.endShape();
                 };
 
-                // Dibujar línea izquierda
-                drawVibratingLine(lineXLeft, 0); // waveOffset = 0
-
-                // Dibujar línea derecha
-                // Usamos un offset en el waveform para que no sea idéntica a la izquierda
-                // y podemos invertir el desplazamiento para un efecto más simétrico si se desea.
-                let rightWaveOffset = Math.floor(wave.length / 4); // Un cuarto del waveform de offset
-                drawVibratingLine(lineXRight, rightWaveOffset, true); // invertDisplacement = true para que ondule hacia adentro o de forma opuesta
-
-                p.pop(); // Fin del contexto de las líneas
+                drawVibratingLine(lineXLeft, 0);
+                let rightWaveOffset = Math.floor(wave.length / 4);
+                drawVibratingLine(lineXRight, rightWaveOffset, true);
+                p.pop();
             }
+
+            // No es necesario restaurar p.blendMode(p.BLEND) aquí si no lo cambiamos antes.
         }; // Fin de p.draw
 
         p.windowResized = () => {
             if (p && typeof p.resizeCanvas === 'function') p.resizeCanvas(p.windowWidth, p.windowHeight);
         };
 
-        // Clase Particle (sin cambios)
         class Particle {
-            constructor(pInstance) { this.p = pInstance; this.pos = this.p.createVector(0,0); this.vel = p5.Vector.random2D().mult(this.p.random(0.5,2)); this.acc = p5.Vector.random2D().mult(this.p.random(0.005,0.02)); this.w = this.p.random(1.5,4); this.color = [this.p.random(200,255),this.p.random(200,255),this.p.random(200,255),this.p.random(80,180)]; this.lifespan = 300; }
-            update(bassKicked) { this.vel.add(this.acc); this.pos.add(this.vel); if(bassKicked) { let push = this.pos.copy().normalize().mult(this.p.random(0.5,1.5)); this.vel.add(push); } this.vel.limit(3); this.lifespan -= 1.5; }
-            edges() { return this.p && this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.75 || this.lifespan < 0; }
-            show() { if(this.p) {this.p.noStroke(); this.p.fill(this.color[0],this.color[1],this.color[2],this.lifespan); this.p.ellipse(this.pos.x,this.pos.y,this.w);} }
+            constructor(pInstance) {
+                this.p = pInstance;
+                this.pos = this.p.createVector(0, 0);
+                this.vel = p5.Vector.random2D().mult(this.p.random(0.5, 2));
+                this.acc = p5.Vector.random2D().mult(this.p.random(0.005, 0.02));
+                this.w = this.p.random(1.5, 4);
+                // Usar blanco opaco para las partículas también, para que mix-blend-mode actúe sobre ellas
+                // El alfa decreciente controlará su visibilidad y cómo se mezclan.
+                this.baseColor = [255, 255, 255]; // Blanco
+                this.lifespan = 255; // Alfa inicial
+            }
+            update(bassKicked) {
+                this.vel.add(this.acc);
+                this.pos.add(this.vel);
+                if (bassKicked) {
+                    let push = this.pos.copy().normalize().mult(this.p.random(0.5, 1.5));
+                    this.vel.add(push);
+                }
+                this.vel.limit(3);
+                this.lifespan -= 2;
+                this.lifespan = this.p.max(0, this.lifespan);
+            }
+            edges() {
+                return (this.p && this.pos.mag() > this.p.max(this.p.width, this.p.height) * 0.75) || this.lifespan <= 0;
+            }
+            show() {
+                if (this.p) {
+                    this.p.noStroke();
+                    // El color del fill es blanco, y el alfa es el lifespan.
+                    // mix-blend-mode actuará sobre estos píxeles blancos (con su alfa)
+                    this.p.fill(this.baseColor[0], this.baseColor[1], this.baseColor[2], this.lifespan);
+                    this.p.ellipse(this.pos.x, this.pos.y, this.w);
+                }
+            }
         }
     }
 };
