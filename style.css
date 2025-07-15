@@ -1,3 +1,5 @@
+/* --- Global Styles --- */
+
 :root {
     --theme-bg-page: #0a0a0a;
     --theme-main-container-bg: #1c1c1c;
@@ -57,13 +59,13 @@ body {
     height: 100%;
     z-index: 2;
     pointer-events: none;
-    mix-blend-mode: difference; /* <--- AÑADIR ESTA LÍNEA */
+    mix-blend-mode: difference;
 }
 #p5-visualizer-container canvas {
     display: block;
 }
 
-#music-control { /* Este es el botón de mute global, lo mantendremos por si acaso */
+#music-control {
     position: fixed; top: 20px; left: 20px; font-size: 1.4em;
     color: var(--theme-text-on-dark);
     background-color: rgba(0,0,0,0.5);
@@ -89,13 +91,12 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     position: relative; z-index: 10;
     transform: scale(1.4);
     transform-origin: center center;
-    padding-top: 85px; /* Espacio para la barra del reproductor + un poco más */
-    transition: padding-top var(--transition-speed) ease-out; /* Para ajustar cuando se oculta la barra */
+    padding-top: 85px;
+    transition: padding-top var(--transition-speed) ease-out;
 }
 
 .main-container {
-    position: relative; /* Retain for positioning */
-    /* Removed overflow, background, padding, etc. */
+    position: relative;
 }
 
 .profile-picture-placeholder {
@@ -103,10 +104,9 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
     border: 3px solid var(--theme-main-container-bg);
     box-shadow: 0 0 0 2px var(--theme-accent-primary);
     border-radius: 50%; display: flex; justify-content: center; align-items: center;
-    /* 👇 ESTA LÍNEA ES CLAVE PARA LA POSICIÓN Y 👇 */
-    margin: -60px auto -20px auto; /* -60px lo sube, 20px es espacio abajo */
+    margin: -60px auto -20px auto;
     position: relative;
-    z-index: 2; /* Importante para el apilamiento de capas */
+    z-index: 2;
     overflow: hidden;
     transform: scale(1.3);
     transform-origin: center center;
@@ -323,24 +323,23 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     box-sizing: border-box;
     z-index: 950;
     border-bottom: 1px solid var(--theme-border-strong);
-    visibility: hidden; /* Inicialmente oculta hasta que JS la muestre */
+    visibility: hidden;
     opacity: 0;
     transform: translateY(-100%);
     transition: visibility 0s linear 0.3s, opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
-#music-player-bar.ready { /* Cuando JS la prepara */
+#music-player-bar.ready {
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
     transition-delay: 0s;
 }
 
-/* NUEVA CLASE PARA OCULTAR LA BARRA CON EL BOTÓN */
 #music-player-bar.collapsed-by-button {
-    transform: translateY(calc(-1 * var(--player-bar-height) - 1px)); /* -1px por el borde */
+    transform: translateY(calc(-1 * var(--player-bar-height) - 1px));
     opacity: 0;
-    visibility: hidden; /* Para que no interfiera con clics */
+    visibility: hidden;
     transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0s linear 0.3s;
 }
 
@@ -560,29 +559,29 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 /* --- Botón para colapsar/expandir reproductor --- */
 #toggle-player-bar-btn {
     position: fixed;
-    top: calc(var(--player-bar-height) - 10px); /* Ligeramente solapado sobre la barra o justo debajo */
+    top: calc(var(--player-bar-height) - 10px);
     left: 50%;
     transform: translateX(-50%);
-    width: 40px; /* Ancho del botón */
-    height: 20px; /* Alto del botón, para que sea como una pestaña */
-    background-color: #222; /* Un poco más oscuro que la barra */
+    width: 40px;
+    height: 20px;
+    background-color: #222;
     color: var(--theme-text-on-dark);
     border: 1px solid var(--theme-border-strong);
-    border-top: none; /* Sin borde superior para que se fusione */
-    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
+    border-top: none;
+    border-radius: 0 0 8px 8px;
     font-size: 0.9em;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 951; /* Encima de la barra del reproductor */
+    z-index: 951;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: background-color var(--transition-speed), transform 0.3s ease-out, top 0.3s ease-out, opacity 0.3s ease-out;
-    opacity: 0; /* Inicialmente oculto hasta que musicPlayerBarDOM sea 'ready' */
+    opacity: 0;
     visibility: hidden;
 }
 
-#toggle-player-bar-btn.ready { /* Cuando JS lo prepara junto con la barra */
+#toggle-player-bar-btn.ready {
     opacity: 1;
     visibility: visible;
 }
@@ -592,11 +591,10 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 
 #toggle-player-bar-btn.player-hidden {
-    top: -1px; /* Para que "asome" desde arriba cuando la barra está oculta */
-    border-top: 1px solid var(--theme-border-strong); /* Mostrar borde superior */
+    top: -1px;
+    border-top: 1px solid var(--theme-border-strong);
     border-bottom: none;
-    border-radius: 0 0 8px 8px; /* Mantener redondeo inferior o ajustar si se prefiere */
-    /* Podríamos cambiar el color de fondo si se desea */
+    border-radius: 0 0 8px 8px;
 }
 
 
@@ -634,7 +632,6 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 
 .main-container-inner-bordered-content {
-    background-color: var(--theme-main-container-bg);
     color: var(--theme-text-on-dark);
     padding: 25px 35px;
     border-radius: 12px;
@@ -642,45 +639,25 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     border: 1px solid var(--theme-border-strong);
     text-align: center;
     position: relative;
-    overflow: hidden; /* Clip the rotating border */
+    overflow: hidden;
     z-index: 1;
+    /* --- FONDO DEL CONTENEDOR PRINCIPAL --- */
+    background-image: url('https://media1.tenor.com/m/ANuWwenXbg0AAAAd/black-hair-blunt-bangs.gif');
+    background-size: cover;
+    background-position: center;
 }
 
-.main-container-inner-bordered-content::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    top: 50%;
-    left: 50%;
-    width: 250%;
-    height: 250%;
-    background-image: conic-gradient(
-        var(--theme-accent-primary) 20deg,
-        #000000 120deg,
-        #ffffff 240deg,
-        var(--theme-accent-primary) 360deg
-    );
-    animation: rotate-border-animation 4s linear infinite;
-    transform: translate(-50%, -50%);
-}
-
+/* ELIMINADO EL PSEUDO-ELEMENTO ::before QUE CREABA LA ANIMACIÓN GIRATORIA */
 .main-container-inner-bordered-content::after {
     content: '';
     position: absolute;
     z-index: 0;
     inset: 3px;
-    background-color: var(--theme-main-container-bg);
+    /* --- FONDO SEMI-TRANSPARENTE SOBRE EL GIF --- */
+    background-color: rgba(28, 28, 28, 0.85); /* #1c1c1c con 85% opacidad */
     border-radius: 12px;
 }
 
-@keyframes rotate-border-animation {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
-}
 
 .main-container-inner-bordered-content > * {
     position: relative;
@@ -726,7 +703,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 
 #contact-modal .modal-content {
-    background-image: url('https://i.pinimg.com/736x/85/62/37/85623702b2f730dcb35d71ca894b3abf.jpg');
+    background-image: url('https://media1.tenor.com/m/yJ26AzSMuTcAAAAC/homura-akemi-madoka-magica.gif');
 }
 
 #links-modal .modal-content {
@@ -734,7 +711,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 
 #faq-modal .modal-content {
-    background-image: url('https://media.istockphoto.com/id/1177493897/fr/vid%C3%A9o/illusion-doptique-psych%C3%A9d%C3%A9lique-noire-et-blanche-contexte-anim%C3%A9-hypnotique-abstrait-papier.jpg?s=640x640&k=20&c=5NNc9O7X8jQJUqezVy0G-Z91zdXHLx6KfiP-NQbfMg=');
+    background-image: url('https://i.pinimg.com/736x/85/62/37/85623702b2f730dcb35d71ca894b3abf.jpg');
 }
 
 
@@ -745,4 +722,5 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #links-modal .modal-content a,
 #faq-modal .modal-content h2,
 #faq-modal .modal-content summary {
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);}
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}

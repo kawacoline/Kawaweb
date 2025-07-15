@@ -86,12 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalStates = new Map(); // Map para flexibilidad a la hora manejar estados de modales.
     const workData = [
         { type: 'banner', text: 'ффф <a href="mailto:kawacoline@gmail.com">work email</a>. ффф I do illustration, animation, web design, and web/app development. :)' },
-        { type: 'tags', title: 'TOOLS', items: ['Adobe Photoshop', 'Adobe Animate', 'Clip Studio Paint', 'Unity 2D/3D', 'Adobe Illustrator', 'Adobe Premiere', 'Adobe After Effects', 'Blender', 'OpenToonz', 'InDesign', 'Figma'] },
-        { type: 'tags', title: 'DEVELOPMENT', items: ['C#', 'C++', 'C', 'Python', 'JavaScript', 'HTML/CSS', 'React', 'LUA', 'Next.js'] },
+        { type: 'tags', title: 'TOOLS', items: ['Adobe SUITE', 'Google SUITE', 'Blender', 'SAI2', 'Figma'] },
+        { type: 'tags', title: 'DEVELOPMENT', items: ['C++', 'Python', 'HTML/CSS/JavaScript', 'React', 'LUA', 'Next.js'] },
         { type: 'videos', title: 'ANIMATIONS/Not mine', items: [{ title: 'Dominate', youtubeId: 'zxyOdltHfb0' }, { title: 'Thrilling Zümrütrüyası【Arknights R.A. anim】', youtubeId: '3kZD1oNxLA0' }, { title: 'EXC3_CM3', youtubeId: 'o1hggJOIY_c' }, { title: 'LOOKING GLASS LUMINESCENCE', youtubeId: 'aftOCaPnsns' }] },
         { type: 'gallery', title: 'ILLUSTRATION', items: ['https://pbs.twimg.com/media/FRe6BQnXoAEljkb?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FfKT2TUWAAAVlT5?format=jpg&name=large', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748721784/chrome_afzHj4q8sT_cxlgp0.png', 'https://pbs.twimg.com/media/FrxI8VQXgAAWWqK?format=jpg&name=4096x4096', 'https://pbs.twimg.com/media/FirVbTyXkAE79L2?format=png&name=900x900', 'https://res.cloudinary.com/dru0licqm/image/upload/v1748813856/Kaelyn_fa1aio.jpg',] },
         { type: 'devProjects', title: 'PROJECTS', items: [{ title: 'Rhythm Game', image: 'https://pbs.twimg.com/media/GqHVqlzagAAIAuI?format=png&name=small', description: "I was bored <a href='#' target='_blank'>Play now!</a>", downloadLink: '#', }, { title: 'This Website!', image: 'https://res.cloudinary.com/dru0licqm/image/upload/v1748710517/chrome_LsMZLfLxop_k9pz2c.png', description: "The very portfolio you are looking at now. Built with HTML, CSS, and vanilla JavaScript. Features include draggable and resizable modal windows, and an audio visualizer.", }] },
-        { type: 'footerText', text: "See more on <a href='https://github.com/kawacoline' target='_blank'>GitHub</a>." }
+        { type: 'footerText', text: "Kinda kinda kinda kinda kinda" }
     ];
 
     // --- Renderizar la sección de trabajo ---

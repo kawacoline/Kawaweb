@@ -162,8 +162,8 @@ const audioVisualizer = {
                 p.noFill(); // Importante
 
                 const lineMarginXRatio = 0.07;
-                const lineTopRatio = 0.1;
-                const lineBottomRatio = 0.9;
+                const lineTopRatio = 0.0;
+                const lineBottomRatio = 1.0;
 
                 const lineXLeft = p.width * lineMarginXRatio;
                 const lineXRight = p.width * (1 - lineMarginXRatio);
