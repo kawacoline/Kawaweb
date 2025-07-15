@@ -18,11 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Playlist: Datos de las canciones ---
     const playlistData = [
-        {
-            title: "Sonar", artist: "Renaud Hallee",
-            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748807195/Sonar_r78tja.mp4",
-            albumArtPath: "assets/SONGS_COVERS/Sonar.jpeg"
-        },
+       
         {
             title: "駿", artist: "Silentroom",
             filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748396118/xtlnbonlqhgycnfgluhj.webm",
@@ -31,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             title: "nostalmic", artist: "いっしん/just usual imagination by Hercelot",
             filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748806936/%E3%83%A2%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9_nostalmic_pd5bh0.webm",
-            albumArtPath: "assets/SONGS_COVERS/nostalmic.jpeg"
+            albumArtPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxgxgtwNKDmZ1ZFCTUIPE2o_BtPfSOhgI_bzKW1sNtoOXk7MMrJRPcAlJEo-Gj0RJj-Ww&usqp=CAU"
         },
         {
             title: "Rainshower", artist: "Silentroom × Shun",
@@ -40,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
             title: "Disengaging", artist: "katagiri/kkmfd - 脱社会ヴァンダリズム独白if",
-            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748805972/Disengaging_fwzokn.webm",
+            filePath: "https://i.ytimg.com/vi/YQRZKOawkrI/sddefault.jpg?v=64849fda",
             albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg"
         },
         {
