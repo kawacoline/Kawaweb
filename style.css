@@ -182,7 +182,69 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     color: var(--theme-text-on-dark); margin-top: 0; border-bottom: 1px solid var(--theme-border-subtle);
     padding-bottom: 8px; margin-bottom: 15px; font-size: 1.3em; font-weight: 600;
 }
-.modal-content a { color: var(--theme-accent-primary); text-decoration: none; font-weight: 500; }
+.modal-content a {
+    color: var(--theme-accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    position: relative; /* Añadir para que los enlaces queden por encima del fondo */
+    z-index: 2;      /* Añadir para que los enlaces queden por encima del fondo */
+}
+.modal.image-bg {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.modal.image-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-overlay);
+    z-index: 0;
+    border-radius: 8px;
+}
+
+.modal.image-bg .modal-header,
+.modal.image-bg .modal-content {
+    position: relative;
+    z-index: 1;
+    background-color: transparent; /* Hacemos transparente el fondo del contenido */
+}
+
+.modal.image-bg .modal-content > * {
+    position: relative;
+    z-index: 1;
+}
+/* --- Contenido específico para cada modal --- */
+
+/* Modal "About Me" */
+#about-modal.image-bg {
+    background-image: url('https://i.pinimg.com/736x/42/8c/04/428c04bddfe8ebedd09f4adda8a798f2.jpg');
+    --gradient-overlay: linear-gradient(to top, rgba(34, 34, 34, 0.85) 0%, rgba(34, 34, 34, 0.5) 100%);
+}
+
+#about-modal .modal-img {
+    display: none; /* Ocultamos la etiqueta <img> original */
+}
+
+/* Modal "Contact" */
+#contact-modal.image-bg {
+    background-image: url('https://i.pinimg.com/736x/85/62/37/85623702b2f730dcb35d71ca894b3abf.jpg');
+    --gradient-overlay: linear-gradient(to top, rgba(34, 34, 34, 0.9) 20%, rgba(34, 34, 34, 0.6) 100%);
+}
+
+#contact-modal .modal-content img {
+    display: none; /* Ocultamos la etiqueta <img> original */
+}
+
+.modal.image-bg .contact-icons {
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 8px;
+  backdrop-filter: blur(5px); /* Efecto "glass" para mejorar legibilidad */
+}
 .modal-content a:hover { text-decoration: underline; color: var(--theme-accent-hover); }
 
 .modal-links-list { list-style-type: none; padding-left: 0; }
