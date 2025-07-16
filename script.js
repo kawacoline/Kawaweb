@@ -36,13 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
             title: "Disengaging", artist: "katagiri/kkmfd - 脱社会ヴァンダリズム独白if",
-            filePath: "https://i.ytimg.com/vi/YQRZKOawkrI/sddefault.jpg?v=64849fda",
-            albumArtPath: "assets/SONGS_COVERS/aegleseeker_cover.jpg"
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748805972/Disengaging_fwzokn.webm",
+            albumArtPath: "https://i.ytimg.com/vi/YQRZKOawkrI/sddefault.jpg?v=64849fda"
         },
         {
             title: "World execute (me)", artist: "Mili",
             filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1748323206/ybejaiedxaryhcbko9ms.webm",
             albumArtPath: "assets/SONGS_COVERS/world_execute_me_cover.jpg"
+        },
+        {
+            title: "Kami no kotoba", artist: "Luschka",
+            filePath: "https://res.cloudinary.com/dru0licqm/video/upload/v1752637147/Luschka_-_Kami_no_Kotoba_lyrics_mK4yZ6Vp6u4_dmyupo.mp4",
+            albumArtPath: "https://i1.sndcdn.com/artworks-000102543629-fz3fhm-t500x500.jpg"
         }
     ];
 
