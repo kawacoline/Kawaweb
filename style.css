@@ -113,6 +113,18 @@ a, button, .icon-item, .modal-header, summary, [data-modal-target] {
 }
 .profile-picture-placeholder img { width: 100%; height: 100%; object-fit: cover; }
 
+.main-container-inner-bordered-content {
+    background-color: var(--theme-main-container-bg);
+    border: 1px solid var(--theme-border-strong);
+    padding: 20px;
+    padding-top: 40px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
 .intro-section h1 { margin-bottom: 8px; font-size: 1.8em; font-weight: 600; color: var(--theme-text-on-dark);}
 .intro-section p { font-size: 0.95em; margin-bottom: 25px; color: var(--theme-text-on-dark); opacity: 0.7; }
 
@@ -182,6 +194,71 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 }
 .modal-content a { color: var(--theme-accent-primary); text-decoration: none; font-weight: 500; }
 .modal-content a:hover { text-decoration: underline; color: var(--theme-accent-hover); }
+
+.modal-content h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: var(--theme-accent-primary);
+    border-bottom: 1px solid var(--theme-border-subtle);
+    padding-bottom: 5px;
+}
+
+.modal-content h4 {
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.prices-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.prices-list li {
+    background-color: rgba(0,0,0,0.2);
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 3px solid var(--theme-accent-primary);
+    font-size: 0.95em;
+}
+
+.prices-list li s {
+    opacity: 0.6;
+    margin-right: 8px;
+}
+
+.paypal-button-container {
+    text-align: center;
+    margin: 25px 0;
+}
+
+.paypal-button {
+    display: inline-block;
+    background-color: #00457C; /* Color principal de PayPal */
+    color: #ffffff;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: background-color 0.2s, transform 0.2s;
+    border: 1px solid #003057;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.paypal-button i {
+    margin-right: 10px;
+}
+
+.paypal-button:hover {
+    background-color: #003057; /* Color más oscuro al pasar el ratón */
+    transform: scale(1.05);
+}
 
 .modal-links-list { list-style-type: none; padding-left: 0; }
 .modal-links-list li a { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -668,7 +745,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #about-modal .modal-content,
 #contact-modal .modal-content,
 #links-modal .modal-content,
-#faq-modal .modal-content {
+#prices-modal .modal-content {
     position: relative;
     background-size: cover;
     background-position: center center;
@@ -679,7 +756,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #about-modal .modal-content::before,
 #contact-modal .modal-content::before,
 #links-modal .modal-content::before,
-#faq-modal .modal-content::before {
+#prices-modal .modal-content::before {
     content: '';
     position: absolute;
     top: 0;
@@ -693,7 +770,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #about-modal .modal-content > *,
 #contact-modal .modal-content > *,
 #links-modal .modal-content > *,
-#faq-modal .modal-content > * {
+#prices-modal .modal-content > * {
     position: relative;
     z-index: 3;
 }
@@ -710,8 +787,8 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
     background-image: url('https://res.cloudinary.com/dqtgqof7g/image/upload/v1752550633/iQreb46_ygpwi0.gif');
 }
 
-#faq-modal .modal-content {
-    background-image: url('https://i.pinimg.com/736x/85/62/37/85623702b2f730dcb35d71ca894b3abf.jpg');
+#prices-modal .modal-content {
+    background-image: url('https://res.cloudinary.com/dqtgqof7g/image/upload/v1752550633/iQreb46_ygpwi0.gif');
 }
 
 
@@ -720,7 +797,7 @@ footer p { margin-top: 8px; font-size: 0.9em; font-weight: 300; }
 #contact-modal .modal-content h2,
 #links-modal .modal-content h2,
 #links-modal .modal-content a,
-#faq-modal .modal-content h2,
-#faq-modal .modal-content summary {
+#prices-modal .modal-content h2,
+#prices-modal .modal-content summary {
     text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
