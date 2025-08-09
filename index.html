@@ -131,41 +131,150 @@ Thank you for your visit///</p>
     <div id="prices-modal" class="modal">
         <div class="modal-header"><span class="modal-title">Precios</span><div class="modal-controls"><button class="minimize-btn" title="Minimizar"><i class="fas fa-window-minimize"></i></button><button class="maximize-btn" title="Maximizar"><i class="fas fa-window-maximize"></i></button><button class="close-btn" title="Cerrar"><i class="fas fa-times"></i></button></div></div>
         <div class="modal-content">
-            <h2>Precios de Comisiones</h2>
-            
-            <h4>Any human/fur</h4>
-            
-            <h3>Precios Base</h3>
-            <ul class="prices-list">
-                <li><strong>Icon:</strong> <s>20$</s> -> 14$</li>
-                <li><strong>Half Body (HB):</strong> <s>35$</s> -> 29$</li>
-                <li><strong>Full Body (FB):</strong> <s>45$</s> -> 39$</li>
-            </ul>
-            <p><strong>Portfolio:</strong> <a href="https://acetylcholine.carrd.co" target="_blank">acetylcholine.carrd.co</a></p>
+  <div class="pricing-hero">
+    <h2>Comisiones</h2>
+    <p>Sale de lanzamiento — precios base en USD</p>
+  </div>
 
-            <h3>Otros Servicios</h3>
-            <ul class="prices-list">
-                <li><strong>Reference Sheet:</strong> 80$ (mínimo, depende de la complejidad)</li>
-                <li><strong>Ilustración para Rig (VTuber):</strong> 200$</li>
-            </ul>
+  <div class="pricing-controls">
+    <div class="control-group">
+      <span class="control-label">Estilo</span>
+      <div class="chip-group" data-control="estilo">
+        <button class="chip active" data-estilo="color" title="Color normal">Color</button>
+        <button class="chip" data-estilo="bn" title="Blanco y Negro">B/N</button>
+        <button class="chip" data-estilo="render" title="Sombras y detalles extra">Render</button>
+      </div>
+    </div>
 
-            <h3>Extras</h3>
-            <ul class="prices-list">
-                <li><strong>Fondo Simple:</strong> GRATIS</li>
-                <li><strong>Fondo Complejo:</strong> 20$ - 40$</li>
-            </ul>
+    <div class="control-group">
+      <label class="control-label">Personajes</label>
+      <div class="stepper" data-control="personajes">
+        <button class="stepper-btn" data-step="-1" aria-label="Restar">–</button>
+        <input class="stepper-value" type="text" value="1" readonly aria-live="polite"/>
+        <button class="stepper-btn" data-step="1" aria-label="Sumar">+</button>
+      </div>
+    </div>
 
-            <p><em>* Puedo dibujar sin referencias.</em></p>
-            <p>❌ <strong>No dibujo:</strong> Mechas</p>
-            
-            <hr>
+    <div class="control-group">
+      <label class="control-label" for="select-fondo">Fondo</label>
+      <select id="select-fondo" class="select" data-control="fondo">
+        <option value="0">Simple (gratis)</option>
+        <option value="20">Complejo (+$20)</option>
+        <option value="40">Muy complejo (+$40)</option>
+      </select>
+    </div>
+  </div>
 
-            <div class="paypal-button-container">
-                <a href="https://paypal.me/kawacat" target="_blank" class="paypal-button">
-                    <i class="fab fa-paypal"></i> Pagar con PayPal
-                </a>
-            </div>
-        </div>
+  <div class="pricing-grid">
+    <!-- ICON -->
+    <article class="pricing-card selected" data-type="icon" data-base="14" data-msrp="20">
+      <div class="ribbon">-30%</div>
+      <header>
+        <i class="fa-regular fa-face-smile card-icon" aria-hidden="true"></i>
+        <h3>Icon</h3>
+        <p class="subtitle">Avatar 1:1</p>
+      </header>
+      <div class="price-row">
+        <span class="msrp">$20</span>
+        <span class="price js-price">$14</span>
+      </div>
+      <ul class="features">
+        <li>Desde hombros</li>
+        <li>Fondo simple incluido</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn ghost" target="_blank" href="https://imgur.com/gallery/this-lady-has-places-to-be-8imAmkU">Ver ejemplo</a>
+        <button class="btn primary js-order" data-target="#contact-modal">Encargar</button>
+      </div>
+    </article>
+
+    <!-- HALF BODY -->
+    <article class="pricing-card" data-type="hb" data-base="29" data-msrp="35">
+      <div class="ribbon best">Best Seller</div>
+      <header>
+        <i class="fa-regular fa-user card-icon" aria-hidden="true"></i>
+        <h3>Half Body (HB)</h3>
+        <p class="subtitle">Cintura hacia arriba</p>
+      </header>
+      <div class="price-row">
+        <span class="msrp">$35</span>
+        <span class="price js-price">$29</span>
+      </div>
+      <ul class="features">
+        <li>Poses expresivas</li>
+        <li>Sombras básicas</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn ghost" target="_blank" href="https://imgur.com/gallery/this-lady-has-places-to-be-8iGIEI(RAkU">Ver ejemplo</a>
+        <button class="btn primary js-order" data-target="#contact-modal">Encargar</button>
+      </div>
+    </article>
+
+    <!-- FULL BODY -->
+    <article class="pricing-card" data-type="fb" data-base="39" data-msrp="45">
+      <div class="ribbon">-13%</div>
+      <header>
+        <i class="fa-solid fa-person-running card-icon" aria-hidden="true"></i>
+        <h3>Full Body (FB)</h3>
+        <p class="subtitle">Figura completa</p>
+      </header>
+      <div class="price-row">
+        <span class="msrp">$45</span>
+        <span class="price js-price">$39</span>
+      </div>
+      <ul class="features">
+        <li>Dinámica de cuerpo completo</li>
+        <li>Fondo simple incluido</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn ghost" target="_blank" href="https://imgur.com/gallery/this-lady-has-places-to-be-8iASd">Ver ejemplo</a>
+        <button class="btn primary js-order" data-target="#contact-modal">Encargar</button>
+      </div>
+    </article>
+  </div>
+
+  <section class="addons">
+    <h3>Servicios extra</h3>
+    <div class="addons-grid">
+      <article class="addon-card">
+        <header>
+          <i class="fa-regular fa-file-lines card-icon" aria-hidden="true"></i>
+          <h4>Reference Sheet</h4>
+        </header>
+        <p class="addon-price">desde <strong>$80</strong> (según complejidad)</p>
+        <a class="btn ghost" target="_blank" href="https://imgur.com/gallery/this-lady-has-places-to-be-8referencesheet">Ver ejemplo</a>
+      </article>
+      <article class="addon-card">
+        <header>
+          <i class="fa-solid fa-user-astronaut card-icon" aria-hidden="true"></i>
+          <h4>Ilustración para Rig (VTuber)</h4>
+        </header>
+        <p class="addon-price"><strong>$200</strong></p>
+      </article>
+    </div>
+  </section>
+
+  <div class="quote-bar">
+    <span>Total estimado:</span>
+    <strong class="js-total">$14</strong>
+    <button class="btn primary js-order" data-target="#contact-modal">Continuar por Discord/Email</button>
+  </div>
+
+  <details class="pricing-faq">
+    <summary>¿Qué incluye / No dibujo?</summary>
+    <div class="faq-body">
+      <p><strong>Incluye:</strong> Fondo simple gratis, correcciones básicas.</p>
+      <p><strong>No dibujo:</strong> Mechas.</p>
+    </div>
+  </details>
+
+  <!-- Mantengo tu botón de PayPal -->
+  <div class="paypal-button-container">
+    <a href="https://paypal.me/kawacat" target="_blank" class="paypal-button">
+      <i class="fab fa-paypal"></i> Pagar con PayPal
+    </a>
+  </div>
+</div>
     </div>
 
     <div id="contact-modal" class="modal">
