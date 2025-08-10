@@ -363,114 +363,158 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Botón para colapsar reproductor, la barra de música o su ícono no encontrado(s).");
     }
 
-    // === Pricing UI logic (nuevo) ===
-    (function setupPricing(){
-      const modal = document.querySelector('#prices-modal .modal-content');
-      if(!modal) return;
 
-      const state = {
-        estilo: 'color',
-        personajes: 1,
-        fondo: 0,
-        selectedType: 'icon',
-        multipliers: { bn: 0.75, color: 1.0, render: 1.4 },
-        base: {
-          icon: { base: 14, msrp: 20 },
-          hb:   { base: 29, msrp: 35 },
-          fb:   { base: 39, msrp: 45 }
-        },
-        extraCharFactor: 0.8 // Cada personaje adicional cuesta ~80% del precio unitario
-      };
+// === Pricing UI + Lightbox (nuevo) ===
+(function pricingUIAndLightbox(){
+  const modal = document.querySelector('#prices-modal .modal-content');
+  if(!modal) return;
 
-      const cards = modal.querySelectorAll('.pricing-card');
-      const totalEl = modal.querySelector('.js-total');
+  // ----- Estado precios -----
+  const state = {
+    estilo: 'color',
+    personajes: 1,
+    fondo: 0,
+    selectedType: 'icon',
+    multipliers: { bn: 0.75, color: 1.0, render: 1.4 },
+    base: { icon: { base: 14, msrp: 20 }, hb: { base: 29, msrp: 35 }, fb: { base: 39, msrp: 45 } },
+    extraCharFactor: 0.8
+  };
 
-      function updateCardPrices(){
-        cards.forEach(card => {
-          const type = card.dataset.type;
-          const base = parseFloat(card.dataset.base);
-          const msrp = parseFloat(card.dataset.msrp);
-          const unit = Math.round(base * state.multipliers[state.estilo]);
-          const msrpEl = card.querySelector('.msrp');
-          if(msrpEl) msrpEl.textContent = `$${msrp}`;
-          const priceEl = card.querySelector('.js-price');
-          if(priceEl) priceEl.textContent = `$${unit}`;
-          card.classList.toggle('selected', state.selectedType === type);
-        });
+  const cards = modal.querySelectorAll('.pricing-card');
+  const totalEl = modal.querySelector('.js-total');
+
+  function updateCardPrices(){
+    cards.forEach(card => {
+      const type = card.dataset.type;
+      const base = parseFloat(card.dataset.base);
+      const msrp = parseFloat(card.dataset.msrp);
+      const unit = Math.round(base * state.multipliers[state.estilo]);
+      const msrpEl = card.querySelector('.msrp');
+      if(msrpEl) msrpEl.textContent = `$${msrp}`;
+      const priceEl = card.querySelector('.js-price');
+      if(priceEl) priceEl.textContent = `$${unit}`;
+      card.classList.toggle('selected', state.selectedType === type);
+    });
+  }
+
+  function computeTotal(){
+    const unitBase = state.base[state.selectedType].base;
+    const unit = Math.round(unitBase * state.multipliers[state.estilo]);
+    let total = unit;
+    if(state.personajes > 1){
+      const extras = state.personajes - 1;
+      total += Math.round(unit * state.extraCharFactor) * extras;
+    }
+    total += parseInt(state.fondo, 10) || 0;
+    if(totalEl) totalEl.textContent = `$${total}`;
+    return total;
+  }
+
+  function refresh(){ updateCardPrices(); computeTotal(); }
+
+  // Selección de card por clic (fuera de botones/miniaturas)
+  cards.forEach(card => {
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.btn') || e.target.closest('.thumb')) return;
+      state.selectedType = card.dataset.type; refresh();
+    });
+  });
+
+  // Chips de estilo
+  modal.querySelectorAll('.chip-group [data-estilo]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      modal.querySelectorAll('.chip-group [data-estilo]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.estilo = btn.dataset.estilo; refresh();
+    });
+  });
+
+  // Stepper personajes
+  const stepper = modal.querySelector('.stepper');
+  if(stepper){
+    const input = stepper.querySelector('input');
+    stepper.addEventListener('click', (e)=>{
+      const delta = parseInt(e.target.dataset.step, 10);
+      if(!isNaN(delta)){
+        state.personajes = Math.max(1, Math.min(4, state.personajes + delta));
+        input.value = state.personajes; refresh();
       }
+    });
+  }
 
-      function computeTotal(){
-        const unitBase = state.base[state.selectedType].base;
-        const unit = Math.round(unitBase * state.multipliers[state.estilo]);
-        let total = unit;
-        if(state.personajes > 1){
-          const extras = state.personajes - 1;
-          total += Math.round(unit * state.extraCharFactor) * extras;
-        }
-        total += parseInt(state.fondo, 10) || 0; // El fondo se cobra una sola vez
-        if(totalEl) totalEl.textContent = `$${total}`;
-        return total;
-      }
+  // Fondo
+  const fondoSel = modal.querySelector('[data-control="fondo"]');
+  if(fondoSel){
+    fondoSel.addEventListener('change', ()=>{
+      state.fondo = parseInt(fondoSel.value, 10) || 0; refresh();
+    });
+  }
 
-      function refresh(){
-        updateCardPrices();
-        computeTotal();
-      }
+  // CTA -> abrir modal de contacto (usa tu openModal existente)
+  modal.querySelectorAll('.js-order').forEach(btn => {
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const contact = document.querySelector('#contact-modal');
+      if(contact) openModal(contact);
+    });
+  });
 
-      // Selección de card
-      cards.forEach(card => {
-        card.addEventListener('click', (e)=>{
-          if(e.target.closest('.btn')) return; // No robar click de los botones
-          state.selectedType = card.dataset.type;
-          refresh();
-        });
-      });
+  // ----- Lightbox -----
+  function openLightbox(urls, startIndex=0){
+    let index = startIndex || 0;
+    const backdrop = document.createElement('div'); backdrop.className = 'lb-backdrop';
+    const img = document.createElement('img'); img.className = 'lb-img'; img.alt = 'Example';
+    const btnClose = document.createElement('button'); btnClose.className = 'lb-close'; btnClose.innerHTML = '✕';
+    const btnPrev = document.createElement('button'); btnPrev.className = 'lb-prev'; btnPrev.innerHTML = '‹';
+    const btnNext = document.createElement('button'); btnNext.className = 'lb-next'; btnNext.innerHTML = '›';
 
-      // Chips de estilo
-      modal.querySelectorAll('.chip-group [data-estilo]').forEach(btn => {
-        btn.addEventListener('click', ()=>{
-          modal.querySelectorAll('.chip-group [data-estilo]').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          state.estilo = btn.dataset.estilo;
-          refresh();
-        });
-      });
+    function show(i){ index = (i + urls.length) % urls.length; img.src = urls[index]; }
+    function close(){ document.removeEventListener('keydown', onKey); backdrop.remove(); btnClose.remove(); btnPrev.remove(); btnNext.remove(); }
 
-      // Stepper de personajes
-      const stepper = modal.querySelector('.stepper');
-      if(stepper){
-        const input = stepper.querySelector('input');
-        stepper.addEventListener('click', (e)=>{
-          const delta = parseInt(e.target.dataset.step, 10);
-          if(!isNaN(delta)){
-            state.personajes = Math.max(1, Math.min(4, state.personajes + delta));
-            input.value = state.personajes;
-            refresh();
-          }
-        });
-      }
+    function onKey(e){
+      if(e.key === 'Escape') close();
+      if(e.key === 'ArrowLeft') show(index-1);
+      if(e.key === 'ArrowRight') show(index+1);
+    }
 
-      // Fondo (select)
-      const fondoSel = modal.querySelector('[data-control="fondo"]');
-      if(fondoSel){
-        fondoSel.addEventListener('change', ()=>{
-          state.fondo = parseInt(fondoSel.value, 10) || 0;
-          refresh();
-        });
-      }
+    btnClose.addEventListener('click', close);
+    btnPrev.addEventListener('click', ()=>show(index-1));
+    btnNext.addEventListener('click', ()=>show(index+1));
+    backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(); });
 
-      // CTA -> abrir modal de contacto
-      modal.querySelectorAll('.js-order').forEach(btn => {
-        btn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          const contact = document.querySelector('#contact-modal');
-          if(contact) openModal(contact);
-        });
-      });
+    backdrop.appendChild(img); document.body.appendChild(backdrop);
+    document.body.appendChild(btnClose); document.body.appendChild(btnPrev); document.body.appendChild(btnNext);
+    document.addEventListener('keydown', onKey);
+    show(index);
+  }
 
-      // Init
-      state.fondo = parseInt(fondoSel ? fondoSel.value : 0, 10) || 0;
-      refresh();
-    })();
+  function gatherThumbsIn(el){
+    return Array.from(el.querySelectorAll('.thumb')).map(t => t.getAttribute('data-full') || t.src);
+  }
 
+  // Abrir lightbox desde miniaturas
+  modal.querySelectorAll('.thumb').forEach(thumb=>{
+    thumb.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const card = e.target.closest('.pricing-card, .addon-card') || modal;
+      const urls = gatherThumbsIn(card);
+      const idx = parseInt(thumb.dataset.index || '0', 10) || 0;
+      if(urls.length) openLightbox(urls, idx);
+    });
+  });
+
+  // Abrir lightbox con botón "Ver ejemplos"
+  modal.querySelectorAll('.js-open-gallery').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const card = btn.closest('.pricing-card, .addon-card') || modal;
+      const urls = gatherThumbsIn(card);
+      if(urls.length) openLightbox(urls, 0);
+    });
+  });
+
+  // Init
+  state.fondo = parseInt(fondoSel ? fondoSel.value : 0, 10) || 0;
+  refresh();
+})();
 });
