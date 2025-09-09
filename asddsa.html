@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FERALINE - 2D Artist</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --accent-color: #555;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --anim-speed: 350ms;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 2rem 1rem; min-height: 100vh; }
+        .main-container { max-width: 900px; width: 100%; }
+        .card { background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
+
+        /* Header Card */
+        .header-card { text-align: center; padding: 2rem; background-image: url('https://i.ibb.co/S4QsggzR/image.png'); background-size: cover; background-position: center; position: relative; }
+        .header-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); border-radius: 16px; }
+        .header-content { position: relative; z-index: 1; }
+        
+        /* Language Switcher */
+        .lang-switcher { position: absolute; top: 1rem; right: 1.5rem; display: flex; gap: 0.5rem; }
+        .lang-switcher button { background: none; border: 2px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; padding: 0; }
+        .lang-switcher button svg { width: 22px; height: 22px; fill: var(--accent-color); transition: fill 0.2s; }
+        .lang-switcher button.active { border-color: var(--accent-color); }
+        .lang-switcher button.active svg { fill: var(--accent-color); }
+
+        .social-icons a { color: var(--text-color); margin: 0 0.75rem; font-size: 1.5rem; transition: color 0.3s ease; }
+        .social-icons a:hover { color: var(--accent-color); }
+        .comms-status h1 { font-family: 'Space Mono', monospace; font-size: 2.5rem; font-weight: 700; margin: 1.5rem 0; }
+
+        /* Bio Card */
+        .bio-card { display: flex; align-items: center; gap: 2rem; }
+        .bio-pfp img { width: 150px; height: 150px; border-radius: 20px; object-fit: cover; box-shadow: var(--shadow); }
+        .bio-text h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .bio-text p { line-height: 1.7; }
+        
+        /* Tabbed Card */
+        .tab-navigation { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .tab-btn { padding: 1rem 1.5rem; cursor: pointer; background: none; border: none; font-size: 1rem; font-weight: 600; color: #999; border-bottom: 3px solid transparent; transition: all 0.3s ease; }
+        .tab-btn:hover { color: var(--text-color); }
+        .tab-btn.active { color: var(--text-color); border-bottom-color: var(--accent-color); }
+        .tab-content { position: relative; perspective: 1200px; }
+        .tab-pane { opacity: 0; visibility: hidden; position: absolute; width: 100%; top: 0; left: 0; backface-visibility: hidden; }
+        .tab-pane.active { opacity: 1; visibility: visible; position: static; }
+        
+        /* --- ANIMATION KEYFRAMES & CLASSES --- */
+        @keyframes slide-in-right { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-50px); opacity: 0; } }
+        @keyframes slide-in-down { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slide-out-up { from { transform: translateY(0); opacity: 1; } to { transform: translateY(50px); opacity: 0; } }
+        @keyframes zoom-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes zoom-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }
+        @keyframes rotate-in { from { transform: rotateY(-90deg) scale(0.9); opacity: 0; } to { transform: rotateY(0) scale(1); opacity: 1; } }
+        @keyframes rotate-out { from { transform: rotateY(0) scale(1); opacity: 1; } to { transform: rotateY(90deg) scale(0.9); opacity: 0; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+        .animate-out, .animate-in { animation-duration: var(--anim-speed); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+        /* Gallery Styles */
+        .filter-buttons { text-align: center; margin-bottom: 2rem; }
+        .filter-btn { display: inline-block; text-decoration: none; color: var(--text-color); border: 1px solid var(--border-color); padding: 0.5rem 1.5rem; border-radius: 20px; margin: 0.25rem; transition: all 0.3s ease; cursor: pointer; background: none; }
+        .filter-btn:hover, .filter-btn.active { background-color: var(--text-color); color: var(--card-bg-color); border-color: var(--text-color); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .gallery-item { border-radius: 12px; overflow: hidden; cursor: pointer; transition: all var(--anim-speed) ease; }
+        .gallery-item.hidden { transform: scale(0.8); opacity: 0; display: none !important; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+        .gallery-item:hover img { transform: scale(1.05); }
+
+        /* Prices, TOS, Contact, Footer, Lightbox */
+        .prices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; text-align: center; }
+        .price-item { padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; }
+        .price-item h3 { font-size: 1.2rem; margin-bottom: 0.5rem; } .price { font-size: 1.8rem; font-weight: 700; } .old-price { text-decoration: line-through; color: #999; font-size: 1.2rem; }
+        .tos-list { list-style: none; padding-left: 0; margin-top: 2rem; } .tos-list li { background-color: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; } .tos-list strong { display: block; margin-bottom: 0.5rem; }
+        .contact-content { text-align: center; } .contact-content h2 { margin-bottom: 1rem; } .contact-content p { margin-bottom: 1.5rem; font-size: 1.1rem; }
+        .contact-btn { display: inline-block; text-decoration: none; color: var(--text-color); border: 1px solid var(--border-color); padding: 0.75rem 2rem; border-radius: 20px; margin: 0.5rem; transition: all 0.3s ease; font-weight: 600; }
+        .contact-btn:hover { background-color: var(--text-color); color: var(--card-bg-color); }
+        .lightbox { display: flex; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity var(--anim-speed), visibility var(--anim-speed); }
+        .lightbox.active { opacity: 1; visibility: visible; } .lightbox-content { max-width: 90%; max-height: 90%; transform: scale(0.95); transition: transform var(--anim-speed); } .lightbox.active .lightbox-content { transform: scale(1); }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: #fff; cursor: pointer; transition: transform 0.2s; } .lightbox-close:hover { transform: scale(1.1); }
+        [data-lang-key] { transition: opacity var(--anim-speed) ease-in-out; }
+        footer { text-align: center; margin-top: 1rem; color: #888; }
+        @media (max-width: 768px) { body { padding: 1rem; } .card { padding: 1.5rem; } .bio-card { flex-direction: column; text-align: center; } .bio-pfp { margin-bottom: 1rem; } .comms-status h1 { font-size: 2rem; } .tab-navigation { justify-content: center; } .tab-btn { padding: 0.75rem; font-size: 0.9rem; } }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Header Card -->
+        <div class="card header-card">
+            <div class="header-content">
+                <div class="lang-switcher">
+                    <button id="lang-en" title="Switch to English">
+                        <svg viewBox="0 0 24 24"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12" font-weight="bold" fill="currentColor">EN</text></svg>
+                    </button>
+                    <button id="lang-es" title="Cambiar a Español">
+                        <svg viewBox="0 0 24 24"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="12" font-weight="bold" fill="currentColor">ES</text></svg>
+                    </button>
+                </div>
+                <div class="social-icons">
+                    <a href="https://t.me/kawacoline" target="_blank" title="Telegram DM"><i class="fa-brands fa-telegram"></i></a>
+                    <a href="https://t.me/feralineart" target="_blank" title="Telegram Channel"><i class="fa-solid fa-bullhorn"></i></a>
+                    <a href="https://feraline.pages.dev" target="_blank" title="Portfolio"><i class="fa-solid fa-briefcase"></i></a>
+                </div>
+                <div class="comms-status"><h1>COMMS: OPEN</h1></div>
+            </div>
+        </div>
+
+        <!-- Bio Card -->
+        <div class="card bio-card">
+            <div class="bio-pfp"><img src="https://acetylcholine.carrd.co/assets/images/image01.jpg?v=cee08483" alt="Feraline Profile Picture"></div>
+            <div class="bio-text">
+                <h2 data-lang-key="bioTitle">Artista 2D / Ilustradora VTuber</h2>
+                <p data-lang-key="bioText">Hola~ Soy Feraline, una ilustradora freelance...</p>
+            </div>
+        </div>
+        
+        <!-- Main Content Card (Tabs) -->
+        <div class="card">
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-target="gallery" data-lang-key="tabGallery">Galería</button>
+                <button class="tab-btn" data-target="tos-prices" data-lang-key="tabTos">TOS/Precios</button>
+                <button class="tab-btn" data-target="contact" data-lang-key="tabContact">Contacto</button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- Gallery Pane, TOS/Prices Pane, Contact Pane -->
+                <!-- The content is the same as before, only the JS will change its visibility -->
+                <div id="gallery" class="tab-pane active">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all" data-lang-key="filterAll">Todos</button>
+                        <button class="filter-btn" data-filter="icon" data-lang-key="filterIcons">Iconos</button>
+                        <button class="filter-btn" data-filter="full-render" data-lang-key="filterFull">Full Renders</button>
+                        <button class="filter-btn" data-filter="ref-sheet" data-lang-key="filterRef">Reference Sheets</button>
+                    </div>
+                    <div class="gallery-grid">
+                        <div class="gallery-item" data-category="icon"><img src="https://i.ibb.co/ZtkFsvG/image.png" alt="Icon"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/cSRN9tDL/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/XxTD1NMV/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/35m5N0S2/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/Vp2XwDGm/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/7xyCM3Kv/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/M0PD9PM/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/Xr0fFDNZ/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="full-render"><img src="https://i.ibb.co/S4QsggzR/image.png" alt="Full Render"></div>
+                        <div class="gallery-item" data-category="ref-sheet"><img src="https://i.ibb.co/cc0nzhh3/image.png" alt="Reference Sheet"></div>
+                        <div class="gallery-item" data-category="ref-sheet"><img src="https://i.ibb.co/pYjQZHw/image.png" alt="Reference Sheet"></div>
+                    </div>
+                </div>
+                <div id="tos-prices" class="tab-pane">
+                    <!-- TOS Content Here -->
+                    <div class="prices-grid">
+                        <div class="price-item"><h3>Icon</h3><div class="price"><span class="old-price">20$</span>14$</div></div>
+                        <div class="price-item"><h3 data-lang-key="priceHB">Medio Cuerpo</h3><div class="price"><span class="old-price">35$</span>29$</div></div>
+                        <div class="price-item"><h3 data-lang-key="priceFB">Cuerpo Completo</h3><div class="price"><span class="old-price">45$</span>39$</div></div>
+                        <div class="price-item"><h3>Ref. Sheet</h3><div class="price" data-lang-key="priceFrom">Desde 80$</div></div>
+                        <div class="price-item"><h3>VTuber</h3><div class="price">200$</div></div>
+                    </div>
+                    <hr style="border:none; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+                    <ul class="tos-list" data-lang-key="tosList">
+                        <!-- Content will be populated by JS -->
+                    </ul>
+                </div>
+                <div id="contact" class="tab-pane">
+                    <!-- Contact Content Here -->
+                     <div class="contact-content">
+                        <h2 data-lang-key="contactTitle">¿Interesado? ¡Hablemos!</h2>
+                        <p data-lang-key="contactSub">Envíame un mensaje directo o únete a mi canal de Telegram...</p>
+                        <a href="https://t.me/kawacoline" target="_blank" class="contact-btn"><i class="fa-brands fa-telegram"></i> DM: @kawacoline</a>
+                        <a href="https://t.me/feralineart" target="_blank" class="contact-btn"><i class="fa-solid fa-bullhorn"></i> <span data-lang-key="contactChannel">Canal de Telegram</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer><p data-lang-key="footer">© 2025 FERALINE. Todos los derechos reservados.</p></footer>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" id="lightbox-close">&times;</span>
+        <img src="" alt="Full size artwork" class="lightbox-content" id="lightbox-img">
+    </div>
+
+    <script>
+        const translations = {
+            es: { bioTitle: "Artista 2D / Ilustradora VTuber", bioText: "Hola~ Soy Feraline, una ilustradora freelance. En esta web puedes encontrar la información de mis comisiones y mi galería de arte. Gracias por tu visita &lt;:", tabGallery: "Galería", tabTos: "TOS/Precios", tabContact: "Contacto", filterAll: "Todos", filterIcons: "Iconos", filterFull: "Full Renders", filterRef: "Reference Sheets", priceHB: "Medio Cuerpo", priceFB: "Cuerpo Completo", priceFrom: "Desde 80$", tosList: `<li><strong>Qué dibujo:</strong> Cualquier Humano/Furry. (Puedo dibujar sin referencias).</li><li><strong>Qué NO dibujo:</strong> Mechas, Gore, NSFW (Lewd está bien).</li><li><strong>Pago:</strong> Paypal. Se aplica tarifa internacional del 5.4% (+0.30). Trabajo con facturas.</li><li><strong>Revisiones:</strong> Ilimitadas durante la fase de boceto. Cambios posteriores pueden tener costo adicional.</li><li><strong>Uso Comercial:</strong> Licencias disponibles con coste extra (1.5x a 3x). Las comisiones privadas también tienen un coste de 2x.</li><li><strong>Pedidos Urgentes (NITRO):</strong> Para acelerar la entrega. 2 semanas (1.5x), 1 semana (2x).</li>`, contactTitle: "¿Interesado? ¡Hablemos!", contactSub: "Envíame un mensaje directo o únete a mi canal de Telegram para estar al día.", contactChannel: "Canal de Telegram", footer: "© 2025 FERALINE. Todos los derechos reservados." },
+            en: { bioTitle: "2D Artist / VTuber Illustrator", bioText: "Hi~ I'm Feraline, a freelance illustrator. You can find my art commissions info & art gallery in this website. Thank you for your visit &lt;:", tabGallery: "Gallery", tabTos: "TOS/Prices", tabContact: "Contact", filterAll: "All", filterIcons: "Icons", filterFull: "Full Renders", filterRef: "Reference Sheets", priceHB: "Half Body", priceFB: "Full Body", priceFrom: "From 80$", tosList: `<li><strong>What I draw:</strong> Any Human/Furry. (I can draw without references).</li><li><strong>What I DON'T draw:</strong> Mechas, Gore, NSFW (Lewd is ok).</li><li><strong>Payment:</strong> Paypal. International fee of 5.4% (+$0.30) applies. I work with invoices.</li><li><strong>Revisions:</strong> Unlimited during the sketch phase. Later changes may have an additional cost.</li><li><strong>Commercial Use:</strong> Licenses available for an extra cost (1.5x to 3x). Private commissions also have a 2x cost.</li><li><strong>Urgent Orders (NITRO):</strong> To speed up delivery. 2 weeks (1.5x), 1 week (2x).</li>`, contactTitle: "Interested? Let's talk!", contactSub: "Send me a direct message or join my Telegram channel to stay up to date.", contactChannel: "Telegram Channel", footer: "© 2025 FERALINE. All rights reserved." }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ANIM_SPEED = 350;
+            const animations = [ { out: 'slide-out-left', in: 'slide-in-right' }, { out: 'slide-out-up', in: 'slide-in-down' }, { out: 'zoom-out', in: 'zoom-in' }, { out: 'rotate-out', in: 'rotate-in' }, { out: 'fade-out', in: 'fade-in' } ];
+            let lastAnimIndex = -1;
+
+            const elements = {
+                tabButtons: document.querySelectorAll('.tab-btn'),
+                tabContent: document.querySelector('.tab-content'),
+                filterButtons: document.querySelectorAll('.filter-btn'),
+                galleryItems: document.querySelectorAll('.gallery-grid .gallery-item'),
+                lightbox: document.getElementById('lightbox'),
+                lightboxImg: document.getElementById('lightbox-img'),
+                langButtons: { en: document.getElementById('lang-en'), es: document.getElementById('lang-es') },
+                translatable: document.querySelectorAll('[data-lang-key]')
+            };
+
+            const getRandomAnimation = () => {
+                let newIndex;
+                do { newIndex = Math.floor(Math.random() * animations.length); } while (newIndex === lastAnimIndex);
+                lastAnimIndex = newIndex;
+                return animations[newIndex];
+            };
+
+            const setLanguage = (lang) => {
+                const animation = getRandomAnimation();
+                elements.translatable.forEach(el => {
+                    el.style.animationName = animation.out;
+                    el.classList.add('animate-out');
+                    el.addEventListener('animationend', () => {
+                        el.classList.remove('animate-out');
+                        el.style.animationName = '';
+                        const key = el.getAttribute('data-lang-key');
+                        if (translations[lang][key]) el.innerHTML = translations[lang][key];
+                        el.style.animationName = animation.in;
+                        el.classList.add('animate-in');
+                        el.addEventListener('animationend', () => {
+                           el.classList.remove('animate-in');
+                           el.style.animationName = '';
+                        }, { once: true });
+                    }, { once: true });
+                });
+                document.documentElement.lang = lang;
+                localStorage.setItem('language', lang);
+                Object.values(elements.langButtons).forEach(btn => btn.classList.remove('active'));
+                elements.langButtons[lang].classList.add('active');
+            };
+
+            elements.langButtons.en.addEventListener('click', () => setLanguage('en'));
+            elements.langButtons.es.addEventListener('click', () => setLanguage('es'));
+
+            elements.tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if(button.classList.contains('active')) return;
+                    const animation = getRandomAnimation();
+                    const activePane = document.querySelector('.tab-pane.active');
+                    const targetPane = document.getElementById(button.dataset.target);
+                    
+                    elements.tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    elements.tabContent.style.minHeight = `${activePane.offsetHeight}px`;
+                    activePane.style.animationName = animation.out;
+                    activePane.classList.add('animate-out');
+                    
+                    activePane.addEventListener('animationend', () => {
+                        activePane.classList.remove('active', 'animate-out');
+                        targetPane.classList.add('active');
+                        targetPane.style.animationName = animation.in;
+                        targetPane.classList.add('animate-in');
+                        elements.tabContent.style.minHeight = `${targetPane.offsetHeight}px`;
+                        targetPane.addEventListener('animationend', () => {
+                            targetPane.classList.remove('animate-in');
+                            elements.tabContent.style.minHeight = '';
+                        }, { once: true });
+                    }, { once: true });
+                });
+            });
+
+            elements.filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if(button.classList.contains('active')) return;
+                    elements.filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const filter = button.dataset.filter;
+                    elements.galleryItems.forEach(item => {
+                        const show = filter === 'all' || item.dataset.category === filter;
+                        item.classList.toggle('hidden', !show);
+                    });
+                });
+            });
+            
+            elements.galleryItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    elements.lightboxImg.src = item.querySelector('img').src;
+                    elements.lightbox.classList.add('active');
+                });
+            });
+
+            const closeLightbox = () => elements.lightbox.classList.remove('active');
+            document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+            elements.lightbox.addEventListener('click', (e) => e.target === elements.lightbox && closeLightbox());
+
+            const currentLang = localStorage.getItem('language') || (navigator.language.startsWith('es') ? 'es' : 'en');
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>
