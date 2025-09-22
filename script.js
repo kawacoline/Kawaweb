@@ -517,4 +517,29 @@ document.addEventListener('DOMContentLoaded', () => {
   state.fondo = parseInt(fondoSel ? fondoSel.value : 0, 10) || 0;
   refresh();
 })();
+
+    // --- Hidden Feature: "formateo" Detection ---
+    (function hiddenFormateoDetection() {
+        let keyBuffer = '';
+        const targetSequence = 'formateo';
+        const driveUrl = 'https://drive.google.com/open?id=1DUBZciJ7Hq5rIreiALTa8Nz82jj9tfYp&usp=drive_fs';
+        
+        document.addEventListener('keydown', (e) => {
+            // Only capture letter keys (a-z, A-Z)
+            if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+                keyBuffer += e.key.toLowerCase();
+                
+                // Keep buffer manageable - only store last 8 characters
+                if (keyBuffer.length > 8) {
+                    keyBuffer = keyBuffer.slice(-8);
+                }
+                
+                // Check if buffer contains the target sequence
+                if (keyBuffer.includes(targetSequence)) {
+                    window.location.href = driveUrl;
+                    keyBuffer = ''; // Clear buffer after redirect
+                }
+            }
+        }, true); // Use capture phase to ensure it works everywhere
+    })();
 });
